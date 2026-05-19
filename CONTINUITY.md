@@ -178,10 +178,13 @@
     - Bumped Markdown cache keys from `md:v1` to `md:v2` and `outputFormatVersion` to `2` so the polluted cached `eb.dk` entry is bypassed after deploy.
     - Added regression tests for HTML-with-Markdown-shaped-script rejection and cache key versioning.
     - Verification passed after the native/cache fix: focused `test/conversion-edge.test.ts test/cache.test.ts`, then `npm run verify:release` (19 files, 79 tests, env hygiene, PRD docs, audit, deploy dry-run, health smoke).
+    - Committed and pushed the native/cache fix as `9b5b6d0` (`Reject HTML in native markdown path`) to `origin/main`.
+    - Final live `eb.dk` verification after deploy returned HTTP 200 `text/markdown`, `X-Converting-Cache: MISS`, `X-Converting-Method: ai`, source content type `text/html;charset=UTF-8`, and a 40 KB Markdown body instead of the old 733 KB raw HTML/native cache hit.
+    - Remaining `eb.dk` noisiness is a content-extraction limitation for a dense news homepage, not the original raw HTML/native cache bug.
   - Now:
-    - Preparing to commit and push the native/cache fix.
+    - Live `eb.dk` conversion no longer returns raw HTML from native cache; it returns AI Markdown with homepage/layout noise.
   - Next:
-    - After deploy, re-test `https://converting.md/https://eb.dk`; expected method should no longer be `native`, and the old raw HTML cache entry should not be used.
+    - Consider a separate content-cleanup/readability layer or Browser Run/readability mode for dense homepages and JS-heavy sites.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.
