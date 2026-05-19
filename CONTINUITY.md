@@ -148,13 +148,15 @@
     - Confirmed the failure disappears when the Linux Rolldown binding is installed explicitly after `npm ci`; the same server/container then passes `npm run check` (19 files, 75 tests).
     - Added `scripts/install-deploy-runner.mjs` and `npm run install:deploy-runner`; the helper runs `npm ci --ignore-scripts --include=dev --include=optional`, then installs the locked Rolldown Linux x64 binding only if npm omitted it.
     - Updated README and `RELEASE_READINESS.md` to point Dokploy/Nixpacks at `NIXPACKS_INSTALL_CMD=npm run install:deploy-runner`.
+    - Verification after deploy-runner install fix: local `npm run install:deploy-runner` passed with writable npm cache, local `npm run check` passed (19 files, 75 tests), deploy preflight/env hygiene/PRD docs/audit passed, server clean `node:22.11-bookworm` replay passed with `npm run install:deploy-runner` plus `npm run check`, and `npm run verify:release` passed.
+    - Committed and pushed the deploy-runner install fix as `bc682dd` (`Fix Dokploy deploy runner install`) to `origin/main`.
   - Now:
-    - Verifying the deploy-runner install fix locally and in the server's clean Node 22.11 container before committing and pushing.
+    - Ready for the user to retry Dokploy after changing `NIXPACKS_INSTALL_CMD` to `npm run install:deploy-runner`.
   - Next:
-    - Commit and push the deploy-runner install fix, then retry Dokploy with `NIXPACKS_INSTALL_CMD=npm run install:deploy-runner`.
+    - Watch the next Dokploy build log; if it still uses `npm ci --ignore-scripts --include=optional`, Dokploy is still using the old install env value.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- UNCONFIRMED: Whether Dokploy is rebuilding with fresh Nixpacks settings or reusing a stale install command/cache from an earlier failed deployment; changing `NIXPACKS_INSTALL_CMD` should invalidate the install layer, and `NIXPACKS_NO_CACHE=1` can force a clean retry if needed.
+- UNCONFIRMED: Whether Dokploy has been updated to use `NIXPACKS_INSTALL_CMD=npm run install:deploy-runner`; if it still fails before printing `Installing missing Rolldown native binding`, the old install command is still active or a cached build is being reused.
 
 # Working set (files/ids/commands):
 - `.dev-docs/converting-md-prd-split/00-index.md`
