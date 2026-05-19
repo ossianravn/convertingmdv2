@@ -8,7 +8,7 @@ import type { AiMarkdownResult, AiToMarkdownOptions } from "../src/types/env";
 import { makeEnv } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 
-type ToMarkdown = (input: Blob, options?: AiToMarkdownOptions) => Promise<AiMarkdownResult>;
+type ToMarkdown = (input: unknown, options?: AiToMarkdownOptions) => Promise<AiMarkdownResult>;
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -44,9 +44,12 @@ describe("conversion edge cases", () => {
     ).rejects.toMatchObject({ code: "output_too_large", status: 413 });
   });
 
-  it("AI passes hostname and cssSelector for HTML conversion", async () => {
+  it("AI passes an HTML document with hostname and cssSelector", async () => {
     const aiSpy = vi.fn<ToMarkdown>(async () => ({ markdown: "# AI", tokens: 5 }));
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("<main>Hello</main>", { headers: { "Content-Type": "text/html" } })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("<main>Hello</main>", { headers: { "Content-Type": "text/html; charset=UTF-8" } }))
+    );
 
     const result = await tryAiMarkdown(
       makeEnv({ AI: { toMarkdown: aiSpy } }),
@@ -57,7 +60,11 @@ describe("conversion edge cases", () => {
     );
 
     expect(result.tokens).toBe(5);
-    expect(aiSpy).toHaveBeenCalledWith(expect.any(Blob), {
+    const [document] = aiSpy.mock.calls[0] ?? [];
+    expect(document).toMatchObject({ name: "page.html" });
+    expect((document as { blob?: Blob }).blob).toBeInstanceOf(Blob);
+    expect((document as { blob: Blob }).blob.type).toBe("text/html");
+    expect(aiSpy).toHaveBeenCalledWith(expect.any(Object), {
       conversionOptions: { html: { hostname: "example.com", cssSelector: "main" } }
     });
   });

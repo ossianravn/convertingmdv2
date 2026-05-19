@@ -7,7 +7,7 @@ import { getPeriodKeys } from "../src/usage/periods";
 import { makeEnv } from "./helpers";
 import { counterRow, createMemoryD1, type CounterDbRow } from "./fakes/d1";
 
-type ToMarkdown = (input: Blob, options?: AiToMarkdownOptions) => Promise<AiMarkdownResult>;
+type ToMarkdown = (input: unknown, options?: AiToMarkdownOptions) => Promise<AiMarkdownResult>;
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -35,7 +35,11 @@ describe("image conversion quota", () => {
     const result = await callAi(d1, aiSpy, { allowImages: true }, { DISABLE_IMAGE_CONVERSION: "false" });
 
     expect(result.markdown).toBe("# Image");
-    expect(aiSpy).toHaveBeenCalledWith(expect.any(Blob), {
+    const [document] = aiSpy.mock.calls[0] ?? [];
+    expect(document).toMatchObject({ name: "image.png" });
+    expect((document as { blob?: Blob }).blob).toBeInstanceOf(Blob);
+    expect((document as { blob: Blob }).blob.type).toBe("image/png");
+    expect(aiSpy).toHaveBeenCalledWith(expect.any(Object), {
       conversionOptions: { image: { descriptionLanguage: "da" } }
     });
     expect(periodCounter(d1.counters, "key", "day")?.image_requests).toBe(1);

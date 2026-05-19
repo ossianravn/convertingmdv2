@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
-- Continue the ConvertingMD/converting.md v1 implementation from the full split PRD.
-- Add a production env-controlled anonymous mode so browser address-bar conversion can be enabled/disabled without API-key headers, while keeping default private mode and disabling Browser Run/image conversion for anonymous traffic.
+- Fix the live `https://converting.md/https://animalworld.dk/hundetrimmer-test/` conversion failure returning `conversion_failed: Cannot read properties of undefined (reading 'type')`.
+- Success means the address-bar conversion path can convert normal HTML pages without auth when production has `REQUIRE_AUTH=false` and `ALLOW_ANON=true`, with image conversion still disabled for anonymous traffic.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -158,10 +158,16 @@
     - First API-key create attempt failed before hitting the Worker because the Docker terminal executed only pasted continuation lines (`-H ...`), causing `bash: -H: command not found`; use one-line curl commands in Dokploy terminal.
     - User asked whether the convenience URL can be opened directly in a browser with the API key as a query parameter; current implementation intentionally rejects query-string API keys and requires `Authorization: Bearer` or `X-API-Key` headers.
     - User requested an env parameter to decide whether API keys are needed, to temporarily allow browser address-bar usage while image conversion remains disabled.
+    - Reproduced the live bug with `curl -i https://converting.md/https://animalworld.dk/hundetrimmer-test/`: HTTP 500 with `conversion_failed` and `Cannot read properties of undefined (reading 'type')`.
+    - Confirmed the target URL returns `Content-Type: text/html; charset=UTF-8`, so native conversion correctly falls through to AI markdown conversion.
+    - Identified the root cause: local code passed a bare `Blob` to `env.AI.toMarkdown`, but Cloudflare Workers types require a Markdown document `{ name, blob }`.
+    - Added regression coverage that verifies HTML and image AI conversion pass a named document whose `blob.type` is the canonical source MIME type.
+    - Patched AI conversion to build `{ name, blob }` documents with safe filenames and normalized MIME types before calling Workers AI.
+    - Verification passed after the AI input-shape fix: `npm run check` (19 files, 78 tests), `npm run verify:release`, and `npm run deploy:preflight`.
   - Now:
-    - Implementing existing `REQUIRE_AUTH=false` + `ALLOW_ANON=true` as explicit anonymous mode in auth middleware and preflight/tests/docs.
+    - Preparing to commit and push the Workers AI input-shape fix.
   - Next:
-    - Verify, commit, push, then tell the user exact Cloudflare/Dokploy env values to toggle public browser use.
+    - Push the fix, then have Dokploy/Cloudflare redeploy and re-test the live `converting.md` conversion URL.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.

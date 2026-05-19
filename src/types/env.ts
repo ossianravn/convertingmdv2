@@ -12,14 +12,21 @@ export interface AiToMarkdownOptions {
   };
 }
 
+export interface AiMarkdownDocument {
+  name: string;
+  blob: Blob;
+}
+
 export interface AiMarkdownResult {
+  format?: "markdown" | "error";
   data?: string | Array<{ name?: string; mimeType?: string; format?: string; tokens?: number; data: string }>;
+  error?: string;
   markdown?: string;
   tokens?: number;
 }
 
 export interface AiBinding {
-  toMarkdown(input: Blob, options?: AiToMarkdownOptions): Promise<AiMarkdownResult>;
+  toMarkdown(input: AiMarkdownDocument, options?: AiToMarkdownOptions): Promise<AiMarkdownResult>;
 }
 
 export interface Env {
@@ -54,4 +61,3 @@ export type AppEnv = {
   Bindings: Env;
   Variables: AppVariables;
 };
-
