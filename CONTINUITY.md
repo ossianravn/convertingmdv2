@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
 - Continue the ConvertingMD/converting.md v1 implementation from the full split PRD.
-- Fix Dokploy/Nixpacks deployment failure caused by Nixpacks selecting Node 18 for a Node 22+ toolchain.
+- Fix Dokploy/Nixpacks deployment failure caused by missing Rolldown optional native binding after Node version was corrected.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -134,10 +134,14 @@
     - Diagnosed Dokploy build failure: Nixpacks used Node `18.20.5`, while Wrangler/Vitest/Rolldown require Node 22+ and failed on missing `node:util.styleText`.
     - Added `.nvmrc` with `22.12.0` and package `engines.node >=22.12.0`; refreshed `package-lock.json` root metadata.
     - Verification after Node pin: `npm run check` passed (19 files, 75 tests), `npm run check:env-hygiene` passed, and `npm run deploy:preflight` passed.
+    - Committed and pushed Node pin as `f965ee3` (`Pin Node version for Dokploy builds`) to `origin/main`.
+    - Diagnosed second Dokploy build failure: Node 22 is now active, but npm omitted Rolldown's Linux optional native binding `@rolldown/binding-linux-x64-gnu`, causing Vitest startup failure.
+    - Added `.npmrc` with `include=optional` and `engine-strict=true` so Nixpacks/npm installs optional native packages and fails early on an incompatible Node runtime.
+    - Verification after npm optional-dependency fix: `npm --cache /tmp/npm-cache ci --ignore-scripts --include=optional` passed, `@rolldown/binding-linux-x64-gnu` resolved locally, `npm run check` passed (19 files, 75 tests), `npm run check:env-hygiene` passed, and `npm run deploy:preflight` passed.
   - Now:
-    - Node-version pin is implemented locally; ready to commit/push for Dokploy rebuild.
+    - Optional-dependency install fix is implemented locally; ready to commit/push.
   - Next:
-    - Commit/push Node pin, then retry Dokploy deployment with `NIXPACKS_NODE_VERSION=22.12.0` if Dokploy does not pick up `.nvmrc`.
+    - Commit/push optional-dependency install fix, then retry Dokploy with `npm ci --ignore-scripts --include=optional` and a clean build cache.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None currently.
