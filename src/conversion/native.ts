@@ -2,7 +2,7 @@ import type { AppConfig } from "../config";
 import { fetchWithLimits } from "../http/fetch-with-limits";
 import { ConvertingError } from "../http/errors";
 import type { ConversionResult } from "./result";
-import { isMarkdownContentType } from "../security/content-type";
+import { isHtmlContentType, isMarkdownContentType } from "../security/content-type";
 import { byteLength } from "../utils/bytes";
 
 export async function tryNativeMarkdown(url: string, config: AppConfig, requestId: string): Promise<ConversionResult> {
@@ -16,7 +16,7 @@ export async function tryNativeMarkdown(url: string, config: AppConfig, requestI
 
   const sourceContentType = result.response.headers.get("Content-Type");
   const markdown = new TextDecoder().decode(result.body);
-  if (!isMarkdownContentType(sourceContentType) && !looksLikeMarkdown(markdown)) {
+  if (!canTreatAsNativeMarkdown(sourceContentType, markdown)) {
     throw new ConvertingError("conversion_failed", "Native Markdown was not available for this URL.", 502);
   }
 
@@ -41,6 +41,12 @@ export async function tryNativeMarkdown(url: string, config: AppConfig, requestI
   };
 }
 
+function canTreatAsNativeMarkdown(contentType: string | null, value: string): boolean {
+  if (isMarkdownContentType(contentType)) return true;
+  if (isHtmlContentType(contentType)) return false;
+  return looksLikeMarkdown(value);
+}
+
 function looksLikeMarkdown(value: string): boolean {
   const trimmed = value.trim();
   return /^#\s/m.test(trimmed) || /\n[-*]\s/.test(trimmed) || /\[[^\]]+\]\([^)]+\)/.test(trimmed);
@@ -51,4 +57,3 @@ function parseOptionalInt(value: string | null): number | null {
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) ? parsed : null;
 }
-

@@ -36,6 +36,23 @@ describe("conversion edge cases", () => {
     });
   });
 
+  it("native rejects HTML even when page scaffolding contains Markdown-shaped text", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response("<script>const value = '[cta](https://example.com)'</script>", {
+            headers: { "Content-Type": "text/html;charset=UTF-8" }
+          })
+      )
+    );
+
+    await expect(tryNativeMarkdown("https://example.com", parseConfig(makeEnv()), "req_test")).rejects.toMatchObject({
+      code: "conversion_failed",
+      status: 502
+    });
+  });
+
   it("native rejects Markdown output over the output limit", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("# Oversized", { headers: { "Content-Type": "text/markdown" } })));
 

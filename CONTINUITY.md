@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
-- Fix the live `https://converting.md/https://animalworld.dk/hundetrimmer-test/` conversion failure returning `conversion_failed: Cannot read properties of undefined (reading 'type')`.
-- Success means the address-bar conversion path can convert normal HTML pages without auth when production has `REQUIRE_AUTH=false` and `ALLOW_ANON=true`, with image conversion still disabled for anonymous traffic.
+- Diagnose the live `https://converting.md/https://eb.dk` conversion-quality issue where the user sees a lot of non-content text that looks like JS/HTML rather than clean Markdown.
+- Success means we can classify whether this is a Cloudflare Markdown conversion limitation, target-page/source issue, or a Worker preprocessing/routing issue, and choose the next fix if needed.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -172,10 +172,16 @@
     - Verification passed after the auth-mode config update: `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run verify:release`.
     - Committed and pushed the auth-mode config update as `aca16ab` (`Deploy anonymous address-bar mode`) to `origin/main`.
     - Final live verification passed: `curl -i https://converting.md/https://animalworld.dk/hundetrimmer-test/` returned HTTP 200 `text/markdown`, `X-Converting-Method: ai`, and source content type `text/html; charset=UTF-8`.
+    - Reproduced the `eb.dk` issue with `curl -sS -D /tmp/converting-eb.headers https://converting.md/https://eb.dk`: response was `CACHE HIT`, `X-Converting-Method: native`, `X-Converting-Source-Content-Type: text/html;charset=UTF-8`, and a 733 KB raw HTML-looking body.
+    - Root cause for the immediate issue: native conversion accepted HTML because its fallback `looksLikeMarkdown()` heuristic matched Markdown-shaped text inside page scaffolding/scripts.
+    - Patched native conversion to reject explicit HTML content types even if the body contains Markdown-shaped text.
+    - Bumped Markdown cache keys from `md:v1` to `md:v2` and `outputFormatVersion` to `2` so the polluted cached `eb.dk` entry is bypassed after deploy.
+    - Added regression tests for HTML-with-Markdown-shaped-script rejection and cache key versioning.
+    - Verification passed after the native/cache fix: focused `test/conversion-edge.test.ts test/cache.test.ts`, then `npm run verify:release` (19 files, 79 tests, env hygiene, PRD docs, audit, deploy dry-run, health smoke).
   - Now:
-    - Live production conversion is working for the reported URL.
+    - Preparing to commit and push the native/cache fix.
   - Next:
-    - Monitor quota/cache behavior and restore private mode later by setting `REQUIRE_AUTH=true` and `ALLOW_ANON=false` when browser address-bar mode is no longer desired.
+    - After deploy, re-test `https://converting.md/https://eb.dk`; expected method should no longer be `native`, and the old raw HTML cache entry should not be used.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.

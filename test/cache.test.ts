@@ -38,6 +38,7 @@ describe("markdown cache", () => {
       markdownRequest({ ai: { cssSelector: "main" } })
     );
 
+    expect(plainKey.startsWith("md:v2:")).toBe(true);
     expect(selectedKey).not.toBe(plainKey);
   });
 
