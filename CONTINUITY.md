@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
 - Continue the ConvertingMD/converting.md v1 implementation from the full split PRD.
-- Get the Cloudflare Worker deployment running from Dokploy by fixing the persistent Nixpacks/Vitest/Rolldown native binding failure, with a verified local/server feedback loop and a clean push to `origin/main`.
+- Finish Cloudflare post-deploy setup for the active `converting-md` Worker: confirm bindings/secrets, route `converting.md`, run D1 migration, create an admin API key, and smoke-test `/healthz` plus `/v1/markdown`.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -150,13 +150,16 @@
     - Updated README and `RELEASE_READINESS.md` to point Dokploy/Nixpacks at `NIXPACKS_INSTALL_CMD=npm run install:deploy-runner`.
     - Verification after deploy-runner install fix: local `npm run install:deploy-runner` passed with writable npm cache, local `npm run check` passed (19 files, 75 tests), deploy preflight/env hygiene/PRD docs/audit passed, server clean `node:22.11-bookworm` replay passed with `npm run install:deploy-runner` plus `npm run check`, and `npm run verify:release` passed.
     - Committed and pushed the deploy-runner install fix as `bc682dd` (`Fix Dokploy deploy runner install`) to `origin/main`.
+    - User showed Cloudflare dashboard screenshot with active `converting-md` Worker deployment, version `0ecc19dd`, deployed manually by Wrangler.
   - Now:
-    - Ready for the user to retry Dokploy after changing `NIXPACKS_INSTALL_CMD` to `npm run install:deploy-runner`.
+    - Guiding the user through Cloudflare post-deploy setup and validation.
   - Next:
-    - Watch the next Dokploy build log; if it still uses `npm ci --ignore-scripts --include=optional`, Dokploy is still using the old install env value.
+    - Confirm Worker bindings/secrets, add a custom domain/route for `converting.md`, apply remote D1 migration, create a key, and test live requests.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- UNCONFIRMED: Whether Dokploy has been updated to use `NIXPACKS_INSTALL_CMD=npm run install:deploy-runner`; if it still fails before printing `Installing missing Rolldown native binding`, the old install command is still active or a cached build is being reused.
+- UNCONFIRMED: Whether `converting.md` is already attached to the Worker as a Custom Domain or Worker Route in Cloudflare.
+- UNCONFIRMED: Whether the remote D1 migration has already been applied after the successful deployment.
+- UNCONFIRMED: Whether production secrets are visible in the Cloudflare Worker settings after the Dokploy/Wrangler deployment.
 
 # Working set (files/ids/commands):
 - `.dev-docs/converting-md-prd-split/00-index.md`
