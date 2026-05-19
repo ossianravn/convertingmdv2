@@ -151,13 +151,15 @@
     - Verification after deploy-runner install fix: local `npm run install:deploy-runner` passed with writable npm cache, local `npm run check` passed (19 files, 75 tests), deploy preflight/env hygiene/PRD docs/audit passed, server clean `node:22.11-bookworm` replay passed with `npm run install:deploy-runner` plus `npm run check`, and `npm run verify:release` passed.
     - Committed and pushed the deploy-runner install fix as `bc682dd` (`Fix Dokploy deploy runner install`) to `origin/main`.
     - User showed Cloudflare dashboard screenshot with active `converting-md` Worker deployment, version `0ecc19dd`, deployed manually by Wrangler.
+    - User is on the Cloudflare “Connect to converting.md” modal; the correct choice for root-domain Worker ownership is `Custom Domains` with the subdomain field left empty.
+    - User reached D1 migration step in Dokploy Docker Terminal and ran `npx wrangler d1 migrations apply converting_md --remote` from `/`; Wrangler failed with “No configuration file found” because `wrangler.jsonc` is under the app directory, expected `/app`.
   - Now:
-    - Guiding the user through Cloudflare post-deploy setup and validation.
+    - Guiding the user to run the remote D1 migration from the repository/app directory inside the running Dokploy container.
   - Next:
-    - Confirm Worker bindings/secrets, add a custom domain/route for `converting.md`, apply remote D1 migration, create a key, and test live requests.
+    - After migration succeeds or reports no pending migrations, create the first API key and run conversion smoke tests.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- UNCONFIRMED: Whether `converting.md` is already attached to the Worker as a Custom Domain or Worker Route in Cloudflare.
+- UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.
 - UNCONFIRMED: Whether the remote D1 migration has already been applied after the successful deployment.
 - UNCONFIRMED: Whether production secrets are visible in the Cloudflare Worker settings after the Dokploy/Wrangler deployment.
 
