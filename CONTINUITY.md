@@ -156,10 +156,11 @@
     - User reran the migration from `/app`; `wrangler.jsonc` and `migrations/0001_init.sql` were present, and Wrangler returned `No migrations to apply!`, confirming the remote D1 migration state is current.
     - Live `/healthz` responded `{"ok":true}` with a Cloudflare request ID.
     - First API-key create attempt failed before hitting the Worker because the Docker terminal executed only pasted continuation lines (`-H ...`), causing `bash: -H: command not found`; use one-line curl commands in Dokploy terminal.
+    - User asked whether the convenience URL can be opened directly in a browser with the API key as a query parameter; current implementation intentionally rejects query-string API keys and requires `Authorization: Bearer` or `X-API-Key` headers.
   - Now:
-    - Guiding the user to create the first owner API key with a single-line curl command.
+    - Explaining browser usage options for authenticated convenience URLs.
   - Next:
-    - Save returned `apiKey`, then run the conversion smoke test.
+    - Use curl/API clients/header-setting browser extension or build a small authenticated UI/signed-link flow if direct browser address-bar usage is required.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.
