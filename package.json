@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "packageManager": "npm@11.14.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "wrangler dev",
     "db:migrate": "wrangler d1 migrations apply converting_md",

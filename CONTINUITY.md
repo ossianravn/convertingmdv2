@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
 - Continue the ConvertingMD/converting.md v1 implementation from the full split PRD.
-- Fix `wrangler.jsonc` so it has one production D1 binding named `DB` and one KV binding named `CACHE_KV` with real Cloudflare resource IDs.
+- Fix Dokploy/Nixpacks deployment failure caused by Nixpacks selecting Node 18 for a Node 22+ toolchain.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -130,10 +130,14 @@
     - Re-ran `npm run verify:release` before pushing: typecheck, 19 Vitest files/75 tests, file-line guard, env hygiene, PRD docs, npm audit, Wrangler deploy dry-run, and health smoke all passed.
     - Replaced duplicate/placeholder Wrangler bindings with the real D1 ID under binding `DB` and the real KV ID under binding `CACHE_KV`.
     - Verification after Wrangler binding fix: `npm run deploy:preflight` passed and focused `npm run test -- test/deploy-preflight.test.ts` passed (3 tests).
+    - Committed and pushed the binding fix as `228521a` (`Configure Cloudflare production bindings`) to `origin/main`.
+    - Diagnosed Dokploy build failure: Nixpacks used Node `18.20.5`, while Wrangler/Vitest/Rolldown require Node 22+ and failed on missing `node:util.styleText`.
+    - Added `.nvmrc` with `22.12.0` and package `engines.node >=22.12.0`; refreshed `package-lock.json` root metadata.
+    - Verification after Node pin: `npm run check` passed (19 files, 75 tests), `npm run check:env-hygiene` passed, and `npm run deploy:preflight` passed.
   - Now:
-    - Wrangler binding config is fixed locally and ready to commit/push.
+    - Node-version pin is implemented locally; ready to commit/push for Dokploy rebuild.
   - Next:
-    - Commit/push the config fix, then continue with deploy token/secrets/migration/deploy setup.
+    - Commit/push Node pin, then retry Dokploy deployment with `NIXPACKS_NODE_VERSION=22.12.0` if Dokploy does not pick up `.nvmrc`.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None currently.
