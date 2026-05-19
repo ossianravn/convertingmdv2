@@ -62,6 +62,10 @@ npm run db:migrate
 npm run deploy
 ```
 
+For Dokploy/Nixpacks, set the install command to
+`npm run install:deploy-runner` so the deploy image repairs npm's optional
+Rolldown native binding issue before the test gate runs.
+
 After deploy:
 
 - Route `converting.md/*` to the Worker in Cloudflare.

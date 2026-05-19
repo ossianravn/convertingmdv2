@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
 - Continue the ConvertingMD/converting.md v1 implementation from the full split PRD.
-- Fix Dokploy/Nixpacks install failure caused by a misspelled optional dependency flag plus overly strict Node engine policy.
+- Get the Cloudflare Worker deployment running from Dokploy by fixing the persistent Nixpacks/Vitest/Rolldown native binding failure, with a verified local/server feedback loop and a clean push to `origin/main`.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -141,13 +141,20 @@
     - Diagnosed third Dokploy install failure: `NIXPACKS_INSTALL_CMD` was entered as `--include=optiona` and `engine-strict=true` rejected Dokploy's Node `22.11.0`.
     - Removed `engine-strict` and relaxed root Node engine to `>=22.0.0` because Dokploy/Nixpacks selected Node `22.11.0`, which is sufficient for `node:util.styleText`; optional dependency installation remains forced.
     - Verification after Node 22.11 compatibility fix: `npm --cache /tmp/npm-cache ci --ignore-scripts --include=optional` passed, `@rolldown/binding-linux-x64-gnu` resolved locally, `npm run check` passed (19 files, 75 tests), and `npm run deploy:preflight` passed.
+    - Committed and pushed the Node 22.11 compatibility fix as `ca40572` (`Relax Node engine for Dokploy builds`) to `origin/main`.
+    - User reported Dokploy still fails during `npm run check` with Vitest/Rolldown unable to find `@rolldown/binding-linux-x64-gnu`.
+    - User authorized server access for diagnosis. SSH config has working host `kpi-v2-panel` for `45.13.225.27` using `/home/ossian/.ssh/id_ed25519_codex`; the user-referenced `/home/ossian/.ssh/codex` key name appears different from the configured key path.
+    - Reproduced the exact missing `@rolldown/binding-linux-x64-gnu` failure on the server in a clean `node:22.11-bookworm` container after `npm ci --ignore-scripts --include=optional`.
+    - Confirmed the failure disappears when the Linux Rolldown binding is installed explicitly after `npm ci`; the same server/container then passes `npm run check` (19 files, 75 tests).
+    - Added `scripts/install-deploy-runner.mjs` and `npm run install:deploy-runner`; the helper runs `npm ci --ignore-scripts --include=dev --include=optional`, then installs the locked Rolldown Linux x64 binding only if npm omitted it.
+    - Updated README and `RELEASE_READINESS.md` to point Dokploy/Nixpacks at `NIXPACKS_INSTALL_CMD=npm run install:deploy-runner`.
   - Now:
-    - Node 22.11 compatibility fix is implemented locally; ready to commit/push.
+    - Verifying the deploy-runner install fix locally and in the server's clean Node 22.11 container before committing and pushing.
   - Next:
-    - Commit/push install fix, then retry Dokploy with the correctly spelled `npm ci --ignore-scripts --include=optional` and a clean build cache.
+    - Commit and push the deploy-runner install fix, then retry Dokploy with `NIXPACKS_INSTALL_CMD=npm run install:deploy-runner`.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- None currently.
+- UNCONFIRMED: Whether Dokploy is rebuilding with fresh Nixpacks settings or reusing a stale install command/cache from an earlier failed deployment; changing `NIXPACKS_INSTALL_CMD` should invalidate the install layer, and `NIXPACKS_NO_CACHE=1` can force a clean retry if needed.
 
 # Working set (files/ids/commands):
 - `.dev-docs/converting-md-prd-split/00-index.md`
@@ -163,6 +170,7 @@
 - `scripts/check-env-hygiene.ts`
 - `scripts/check-prd-docs.ts`
 - `scripts/smoke-health.ts`
+- `scripts/install-deploy-runner.mjs`
 - `src/middleware/query-string-auth.ts`
 - `test/**`
 - `test/deploy-preflight.test.ts`
@@ -190,4 +198,4 @@
 - `src/usage/events.ts`
 - `src/usage/admin-report.ts`
 - `test/cache.test.ts`
-- Commands: `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm run verify:release`, `npm run deploy:preflight`, `npm run smoke:health`, `npm run check`, `npm --cache /tmp/npm-cache audit`, `npm run deploy:dry-run`, `API_KEY_PEPPER=pepper npm run create-local-key`, Wrangler local `/healthz` smoke
+- Commands: `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm --cache /tmp/npm-cache ci --ignore-scripts --include=optional`, `npm run verify:release`, `npm run deploy:preflight`, `npm run smoke:health`, `npm run check`, `npm --cache /tmp/npm-cache audit`, `npm run deploy:dry-run`, `API_KEY_PEPPER=pepper npm run create-local-key`, Wrangler local `/healthz` smoke, `ssh kpi-v2-panel ...`

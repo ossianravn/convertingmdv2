@@ -213,6 +213,13 @@ Check real-deploy readiness:
 npm run deploy:preflight
 ```
 
+Dokploy/Nixpacks deploy runners should use this install command so npm repairs
+Rolldown's Linux native binding before running Vitest:
+
+```bash
+NIXPACKS_INSTALL_CMD=npm run install:deploy-runner
+```
+
 Route `converting.md/*` to the Worker in Cloudflare.
 
 ## Safety Defaults
@@ -289,11 +296,5 @@ The release gate runs TypeScript, Vitest, the file-line guard, env hygiene, PRD-
 
 ## Future Features Not In V1
 
-- file uploads
-- PDF uploads
-- multi-page crawling
-- sitemap ingestion
-- billing dashboard
-- OAuth or user accounts
-- embeddings or vector storage
-- structured extraction
+File uploads, PDF uploads, multi-page crawling, sitemap ingestion, billing,
+OAuth/user accounts, embeddings/vector storage, and structured extraction.
