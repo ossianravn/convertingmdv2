@@ -123,10 +123,14 @@
     - Added Browser Run request-shape tests for Cloudflare endpoint URL, bearer auth header, JSON body, `gotoOptions`, default asset blocking, `networkidle2`, and disabled asset blocking.
     - Updated `ACCEPTANCE_MATRIX.md` with Browser Run REST body coverage.
     - Verification passed after Browser Run request-shape coverage: focused browser-budget tests passed (7 tests), typecheck passed after typed fetch-spy cleanup, `npm run check` passed (19 test files, 75 tests), `npm --cache /tmp/npm-cache ci --ignore-scripts` passed, `npm run verify:release` passed (env hygiene, PRD docs, audit 0 vulnerabilities, deploy dry-run, health smoke), `npm run deploy:preflight` failed for the expected placeholder D1/KV IDs, no leftover Wrangler/workerd process remained, marker scan was clean, and `package-lock.json` SHA-256 stayed `227f53f8415c045a73b82cace6ba710f4b32f9469f78cd8901840a85ace01b85`.
+    - Initialized git metadata in ignored `.git-local/` because `.git` is mounted read-only in this sandbox.
+    - Added remote `origin` as `https://github.com/ossianravn/convertingmdv2.git`.
+    - Committed initial implementation as `eb14fbf` (`Initial converting.md worker implementation`) on `main` and pushed it to `origin/main`.
+    - Re-ran `npm run verify:release` before pushing: typecheck, 19 Vitest files/75 tests, file-line guard, env hygiene, PRD docs, npm audit, Wrangler deploy dry-run, and health smoke all passed.
   - Now:
-    - Browser Run request-shape coverage slice is implemented and verified; git initialization/commit/push is starting.
+    - Initial GitHub push is complete; continuity ledger is being updated with the final publish state.
   - Next:
-    - Inspect repository state, initialize git if needed, stage the intended project files, commit, set GitHub remote, and push.
+    - Commit and push this ledger update, then verify local/remote status.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None yet.
