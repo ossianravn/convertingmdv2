@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
 - Continue the ConvertingMD/converting.md v1 implementation from the full split PRD.
-- Fix Dokploy/Nixpacks deployment failure caused by missing Rolldown optional native binding after Node version was corrected.
+- Fix Dokploy/Nixpacks install failure caused by a misspelled optional dependency flag plus overly strict Node engine policy.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -136,12 +136,15 @@
     - Verification after Node pin: `npm run check` passed (19 files, 75 tests), `npm run check:env-hygiene` passed, and `npm run deploy:preflight` passed.
     - Committed and pushed Node pin as `f965ee3` (`Pin Node version for Dokploy builds`) to `origin/main`.
     - Diagnosed second Dokploy build failure: Node 22 is now active, but npm omitted Rolldown's Linux optional native binding `@rolldown/binding-linux-x64-gnu`, causing Vitest startup failure.
-    - Added `.npmrc` with `include=optional` and `engine-strict=true` so Nixpacks/npm installs optional native packages and fails early on an incompatible Node runtime.
+    - Added `.npmrc` with `include=optional` so Nixpacks/npm installs optional native packages.
     - Verification after npm optional-dependency fix: `npm --cache /tmp/npm-cache ci --ignore-scripts --include=optional` passed, `@rolldown/binding-linux-x64-gnu` resolved locally, `npm run check` passed (19 files, 75 tests), `npm run check:env-hygiene` passed, and `npm run deploy:preflight` passed.
+    - Diagnosed third Dokploy install failure: `NIXPACKS_INSTALL_CMD` was entered as `--include=optiona` and `engine-strict=true` rejected Dokploy's Node `22.11.0`.
+    - Removed `engine-strict` and relaxed root Node engine to `>=22.0.0` because Dokploy/Nixpacks selected Node `22.11.0`, which is sufficient for `node:util.styleText`; optional dependency installation remains forced.
+    - Verification after Node 22.11 compatibility fix: `npm --cache /tmp/npm-cache ci --ignore-scripts --include=optional` passed, `@rolldown/binding-linux-x64-gnu` resolved locally, `npm run check` passed (19 files, 75 tests), and `npm run deploy:preflight` passed.
   - Now:
-    - Optional-dependency install fix is implemented locally; ready to commit/push.
+    - Node 22.11 compatibility fix is implemented locally; ready to commit/push.
   - Next:
-    - Commit/push optional-dependency install fix, then retry Dokploy with `npm ci --ignore-scripts --include=optional` and a clean build cache.
+    - Commit/push install fix, then retry Dokploy with the correctly spelled `npm ci --ignore-scripts --include=optional` and a clean build cache.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None currently.
