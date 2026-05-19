@@ -164,10 +164,12 @@
     - Added regression coverage that verifies HTML and image AI conversion pass a named document whose `blob.type` is the canonical source MIME type.
     - Patched AI conversion to build `{ name, blob }` documents with safe filenames and normalized MIME types before calling Workers AI.
     - Verification passed after the AI input-shape fix: `npm run check` (19 files, 78 tests), `npm run verify:release`, and `npm run deploy:preflight`.
+    - Committed and pushed the fix as `e078a41` (`Fix Workers AI markdown document input`) to `origin/main`.
+    - Immediate live probe still returned the same `Cannot read properties of undefined (reading 'type')` error, which means production had not yet redeployed the new Worker code.
   - Now:
-    - Preparing to commit and push the Workers AI input-shape fix.
+    - Waiting for Dokploy/Cloudflare deployment of the pushed fix.
   - Next:
-    - Push the fix, then have Dokploy/Cloudflare redeploy and re-test the live `converting.md` conversion URL.
+    - After redeploy, re-test the live `converting.md` conversion URL and confirm production variables still enable anonymous mode if browser address-bar use is desired.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.
