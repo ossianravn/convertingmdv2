@@ -153,14 +153,14 @@
     - User showed Cloudflare dashboard screenshot with active `converting-md` Worker deployment, version `0ecc19dd`, deployed manually by Wrangler.
     - User is on the Cloudflare “Connect to converting.md” modal; the correct choice for root-domain Worker ownership is `Custom Domains` with the subdomain field left empty.
     - User reached D1 migration step in Dokploy Docker Terminal and ran `npx wrangler d1 migrations apply converting_md --remote` from `/`; Wrangler failed with “No configuration file found” because `wrangler.jsonc` is under the app directory, expected `/app`.
+    - User reran the migration from `/app`; `wrangler.jsonc` and `migrations/0001_init.sql` were present, and Wrangler returned `No migrations to apply!`, confirming the remote D1 migration state is current.
   - Now:
-    - Guiding the user to run the remote D1 migration from the repository/app directory inside the running Dokploy container.
+    - Guiding the user through first live smoke test and API-key creation.
   - Next:
-    - After migration succeeds or reports no pending migrations, create the first API key and run conversion smoke tests.
+    - Test `/healthz`, create the first owner API key via admin route, then run a conversion smoke test.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.
-- UNCONFIRMED: Whether the remote D1 migration has already been applied after the successful deployment.
 - UNCONFIRMED: Whether production secrets are visible in the Cloudflare Worker settings after the Dokploy/Wrangler deployment.
 
 # Working set (files/ids/commands):
