@@ -1,0 +1,38 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "converting-md",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-19",
+  "ai": {
+    "binding": "AI"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "converting_md",
+      "database_id": "REPLACE_ME"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE_KV",
+      "id": "REPLACE_ME"
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "production",
+    "REQUIRE_AUTH": "true",
+    "ALLOW_ANON": "false",
+    "DISABLE_BROWSER": "false",
+    "DISABLE_IMAGE_CONVERSION": "true",
+    "DEFAULT_CACHE_TTL_SECONDS": "86400",
+    "MAX_SOURCE_BYTES": "2097152",
+    "MAX_OUTPUT_BYTES": "2097152",
+    "MAX_BROWSER_MS_PER_REQUEST": "10000",
+    "GLOBAL_DAILY_BROWSER_MS_LIMIT": "600000",
+    "GLOBAL_MONTHLY_BROWSER_MS_LIMIT": "36000000",
+    "GLOBAL_DAILY_IMAGE_LIMIT": "50",
+    "GLOBAL_MONTHLY_IMAGE_LIMIT": "500"
+  }
+}
+

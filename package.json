@@ -1,0 +1,39 @@
+{
+  "name": "converting-md",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.14.1",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:migrate": "wrangler d1 migrations apply converting_md",
+    "db:migrate:local": "wrangler d1 migrations apply converting_md --local",
+    "deploy:preflight": "tsx scripts/check-deploy-config.ts",
+    "predeploy": "npm run deploy:preflight",
+    "deploy": "wrangler deploy",
+    "deploy:dry-run": "HOME=/tmp wrangler deploy --dry-run --outdir .wrangler/dry-run",
+    "create-local-key": "tsx scripts/create-local-key.ts",
+    "smoke:health": "tsx scripts/smoke-health.ts",
+    "check:env-hygiene": "tsx scripts/check-env-hygiene.ts",
+    "check:prd-docs": "tsx scripts/check-prd-docs.ts",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check:file-lines": "tsx scripts/check-file-lines.ts",
+    "check": "npm run typecheck && npm run test && npm run check:file-lines",
+    "verify:release": "npm run check && npm run check:env-hygiene && npm run check:prd-docs && npm --cache /tmp/npm-cache audit && npm run deploy:dry-run && npm run smoke:health"
+  },
+  "dependencies": {
+    "hono": "^4.12.19"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260519.1",
+    "@types/node": "^25.9.0",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.6",
+    "wrangler": "^4.93.0"
+  },
+  "overrides": {
+    "ws": "^8.20.1"
+  }
+}

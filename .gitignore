@@ -1,0 +1,9 @@
+node_modules/
+.git-local/
+dist/
+.wrangler/
+.dev.vars
+.env
+.env.*
+coverage/
+npm-debug.log*
