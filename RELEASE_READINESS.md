@@ -48,9 +48,9 @@ Before a real deployment:
 - Confirm `npm run deploy:preflight` passes.
 - Set strong production secrets with `wrangler secret put`.
 - Apply the production D1 migration with `npm run db:migrate`.
-- Choose auth mode explicitly: private uses `REQUIRE_AUTH=true` and
-  `ALLOW_ANON=false`; temporary browser address-bar mode uses
-  `REQUIRE_AUTH=false` and `ALLOW_ANON=true`.
+- The current `wrangler.jsonc` deploys temporary browser address-bar mode:
+  `REQUIRE_AUTH=false` and `ALLOW_ANON=true`. Restore private mode by setting
+  `REQUIRE_AUTH=true` and `ALLOW_ANON=false`.
 - Keep `DISABLE_IMAGE_CONVERSION=true` unless intentionally enabling image conversion.
 - Enable Browser Run only for trusted API keys with conservative browser-ms limits.
 - Confirm `ADMIN_TOKEN` and `API_KEY_PEPPER` are strong random values.

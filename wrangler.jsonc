@@ -21,8 +21,8 @@
   ],
   "vars": {
     "ENVIRONMENT": "production",
-    "REQUIRE_AUTH": "true",
-    "ALLOW_ANON": "false",
+    "REQUIRE_AUTH": "false",
+    "ALLOW_ANON": "true",
     "DISABLE_BROWSER": "false",
     "DISABLE_IMAGE_CONVERSION": "true",
     "DEFAULT_CACHE_TTL_SECONDS": "86400",

@@ -224,10 +224,11 @@ Route `converting.md/*` to the Worker in Cloudflare.
 
 ## Auth Modes
 
-Private mode is the default: `REQUIRE_AUTH=true` and `ALLOW_ANON=false`.
-Temporary browser address-bar mode is explicit: set `REQUIRE_AUTH=false` and
-`ALLOW_ANON=true`. Anonymous traffic is tracked as `anon_public`; Browser Run
-and image conversion stay disabled for anonymous requests.
+Private mode is `REQUIRE_AUTH=true` and `ALLOW_ANON=false`. The current
+production Wrangler config uses temporary browser address-bar mode with
+`REQUIRE_AUTH=false` and `ALLOW_ANON=true`. Anonymous traffic is tracked as
+`anon_public`; Browser Run and image conversion stay disabled for anonymous
+requests.
 
 ## Production Checklist
 

@@ -166,10 +166,14 @@
     - Verification passed after the AI input-shape fix: `npm run check` (19 files, 78 tests), `npm run verify:release`, and `npm run deploy:preflight`.
     - Committed and pushed the fix as `e078a41` (`Fix Workers AI markdown document input`) to `origin/main`.
     - Immediate live probe still returned the same `Cannot read properties of undefined (reading 'type')` error, which means production had not yet redeployed the new Worker code.
+    - After redeploy, the live URL changed to `missing_api_key`, proving the AI crash fix reached production but `wrangler.jsonc` had redeployed private auth mode.
+    - Updated `wrangler.jsonc` to deploy the requested temporary browser address-bar mode: `REQUIRE_AUTH=false` and `ALLOW_ANON=true`, while keeping `DISABLE_IMAGE_CONVERSION=true`.
+    - Updated README and release readiness notes to document that the current production Wrangler config is public anonymous mode and how to restore private mode.
+    - Verification passed after the auth-mode config update: `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run verify:release`.
   - Now:
-    - Waiting for Dokploy/Cloudflare deployment of the pushed fix.
+    - Preparing to commit and push the auth-mode deployment config update.
   - Next:
-    - After redeploy, re-test the live `converting.md` conversion URL and confirm production variables still enable anonymous mode if browser address-bar use is desired.
+    - After the config update deploys, re-test the live `converting.md` conversion URL and confirm it returns Markdown rather than auth or AI-shape errors.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.
