@@ -126,11 +126,12 @@
     - Initialized git metadata in ignored `.git-local/` because `.git` is mounted read-only in this sandbox.
     - Added remote `origin` as `https://github.com/ossianravn/convertingmdv2.git`.
     - Committed initial implementation as `eb14fbf` (`Initial converting.md worker implementation`) on `main` and pushed it to `origin/main`.
+    - Pushed the continuity-ledger follow-up commits so `origin/main` reflects the final publish state.
     - Re-ran `npm run verify:release` before pushing: typecheck, 19 Vitest files/75 tests, file-line guard, env hygiene, PRD docs, npm audit, Wrangler deploy dry-run, and health smoke all passed.
   - Now:
-    - Initial GitHub push is complete; continuity ledger is being updated with the final publish state.
+    - GitHub initialization, commit, and push are complete.
   - Next:
-    - Commit and push this ledger update, then verify local/remote status.
+    - Real Cloudflare deploy/publish still requires replacing placeholder binding IDs and setting production secrets.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None yet.
