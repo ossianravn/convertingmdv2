@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
 - Continue the ConvertingMD/converting.md v1 implementation from the full split PRD.
-- Initialize the local git repository, commit the verified implementation, and push it to `https://github.com/ossianravn/convertingmdv2.git`.
+- Fix `wrangler.jsonc` so it has one production D1 binding named `DB` and one KV binding named `CACHE_KV` with real Cloudflare resource IDs.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -128,13 +128,15 @@
     - Committed initial implementation as `eb14fbf` (`Initial converting.md worker implementation`) on `main` and pushed it to `origin/main`.
     - Pushed the continuity-ledger follow-up commits so `origin/main` reflects the final publish state.
     - Re-ran `npm run verify:release` before pushing: typecheck, 19 Vitest files/75 tests, file-line guard, env hygiene, PRD docs, npm audit, Wrangler deploy dry-run, and health smoke all passed.
+    - Replaced duplicate/placeholder Wrangler bindings with the real D1 ID under binding `DB` and the real KV ID under binding `CACHE_KV`.
+    - Verification after Wrangler binding fix: `npm run deploy:preflight` passed and focused `npm run test -- test/deploy-preflight.test.ts` passed (3 tests).
   - Now:
-    - GitHub initialization, commit, and push are complete.
+    - Wrangler binding config is fixed locally and ready to commit/push.
   - Next:
-    - Real Cloudflare deploy/publish still requires replacing placeholder binding IDs and setting production secrets.
+    - Commit/push the config fix, then continue with deploy token/secrets/migration/deploy setup.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- None yet.
+- None currently.
 
 # Working set (files/ids/commands):
 - `.dev-docs/converting-md-prd-split/00-index.md`

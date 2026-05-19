@@ -10,13 +10,13 @@
     {
       "binding": "DB",
       "database_name": "converting_md",
-      "database_id": "REPLACE_ME"
+      "database_id": "426f6010-a165-4951-ad3d-13acad99e476"
     }
   ],
   "kv_namespaces": [
     {
       "binding": "CACHE_KV",
-      "id": "REPLACE_ME"
+      "id": "058485c020954ad8905c89eff79bbedc"
     }
   ],
   "vars": {
@@ -35,4 +35,3 @@
     "GLOBAL_MONTHLY_IMAGE_LIMIT": "500"
   }
 }
-
