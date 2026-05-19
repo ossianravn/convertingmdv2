@@ -40,17 +40,34 @@ function bindingIssues(value: unknown, path: string, binding: string, idKey: str
 function productionVarIssues(value: unknown): DeployConfigIssue[] {
   if (!isRecord(value)) return [{ path: "vars", message: "vars must be an object." }];
 
-  return requiredVars.flatMap(([name, expected]) => {
-    return value[name] === expected ? [] : [{ path: `vars.${name}`, message: `${name} must be ${JSON.stringify(expected)}.` }];
-  });
+  return [
+    ...requiredVars.flatMap(([name, expected]) => {
+      return value[name] === expected ? [] : [{ path: `vars.${name}`, message: `${name} must be ${JSON.stringify(expected)}.` }];
+    }),
+    ...authModeIssues(value)
+  ];
 }
 
 const requiredVars = [
   ["ENVIRONMENT", "production"],
-  ["REQUIRE_AUTH", "true"],
-  ["ALLOW_ANON", "false"],
   ["DISABLE_IMAGE_CONVERSION", "true"]
 ] as const;
+
+function authModeIssues(vars: Record<string, unknown>): DeployConfigIssue[] {
+  const requireAuth = vars["REQUIRE_AUTH"];
+  const allowAnon = vars["ALLOW_ANON"];
+  const locked = requireAuth === "true" && allowAnon === "false";
+  const anonymous = requireAuth === "false" && allowAnon === "true";
+
+  if (locked || anonymous) return [];
+
+  return [
+    {
+      path: "vars.REQUIRE_AUTH",
+      message: 'auth mode must be either REQUIRE_AUTH="true"/ALLOW_ANON="false" or REQUIRE_AUTH="false"/ALLOW_ANON="true".'
+    }
+  ];
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

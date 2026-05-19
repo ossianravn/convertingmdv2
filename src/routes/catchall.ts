@@ -16,7 +16,7 @@ export function registerCatchallRoutes(app: Hono<AppEnv>): void {
       {
         service: "converting.md",
         routes: ["GET /healthz", "POST /v1/markdown", "GET /v1/markdown?url=", "GET /https://example.com/page"],
-        auth: "Conversion routes require Authorization: Bearer cmd_live_..."
+        auth: "Conversion routes require Authorization: Bearer cmd_live_... unless anonymous mode is enabled."
       },
       200,
       c.get("requestId")
@@ -36,4 +36,3 @@ export function registerCatchallRoutes(app: Hono<AppEnv>): void {
     return handleMarkdownRequest(c, request, config);
   });
 }
-

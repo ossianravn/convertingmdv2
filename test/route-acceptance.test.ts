@@ -129,6 +129,45 @@ describe("markdown route acceptance", () => {
     });
   });
 
+  it("allows browser address-bar conversion when anonymous mode is explicit", async () => {
+    const setup = anonymousSetup();
+    vi.stubGlobal("fetch", nativeFetch("# Anonymous"));
+
+    const response = await app.fetch(new Request("https://converting.md/https://example.com/page"), setup.env);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-RateLimit-Remaining-Day")).toBe("99999");
+    expect(await response.text()).toBe("# Anonymous");
+    expect(setup.d1.conversionEvents[0]).toMatchObject({
+      api_key_id: "anon_public",
+      host: "example.com",
+      method: "native",
+      status: "success"
+    });
+  });
+
+  it("keeps Browser Run disabled for anonymous traffic", async () => {
+    const setup = anonymousSetup();
+
+    const response = await app.fetch(
+      new Request("https://converting.md/v1/markdown", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: "https://example.com/page",
+          mode: "browser",
+          browser: { enabled: true }
+        })
+      }),
+      setup.env
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "browser_not_allowed" }
+    });
+  });
+
   it("logs conversion errors without storing raw URLs", async () => {
     const setup = await authedSetup();
 
@@ -172,6 +211,19 @@ async function authedSetup(kv: MemoryKv = createMemoryKv()) {
     rawKey,
     d1,
     env: makeEnv({ DB: d1.database, CACHE_KV: kv.namespace, API_KEY_PEPPER: pepper })
+  };
+}
+
+function anonymousSetup(kv: MemoryKv = createMemoryKv()) {
+  const d1 = createMemoryD1();
+  return {
+    d1,
+    env: makeEnv({
+      DB: d1.database,
+      CACHE_KV: kv.namespace,
+      REQUIRE_AUTH: "false",
+      ALLOW_ANON: "true"
+    })
   };
 }
 

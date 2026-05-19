@@ -16,6 +16,7 @@ Covered criteria:
 - API keys are HMAC-hashed and raw keys are returned only once at creation.
 - Local key helper emits `cmd_test_` keys with D1-ready HMAC hashes for offline seed workflows.
 - `Authorization: Bearer` and `X-API-Key` auth are covered; missing, invalid, revoked, and query-string API keys are rejected globally.
+- Explicit anonymous mode uses `REQUIRE_AUTH=false` and `ALLOW_ANON=true`, tracks traffic as `anon_public`, and keeps Browser Run disabled for anonymous requests.
 - Admin routes require `Authorization: Bearer <ADMIN_TOKEN>` and reject API keys or query-string admin tokens.
 - Admin key create/list/patch and safe usage summary routes are covered.
 

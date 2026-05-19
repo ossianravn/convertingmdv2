@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
 - Continue the ConvertingMD/converting.md v1 implementation from the full split PRD.
-- Finish Cloudflare post-deploy setup for the active `converting-md` Worker: confirm bindings/secrets, route `converting.md`, run D1 migration, create an admin API key, and smoke-test `/healthz` plus `/v1/markdown`.
+- Add a production env-controlled anonymous mode so browser address-bar conversion can be enabled/disabled without API-key headers, while keeping default private mode and disabling Browser Run/image conversion for anonymous traffic.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -157,10 +157,11 @@
     - Live `/healthz` responded `{"ok":true}` with a Cloudflare request ID.
     - First API-key create attempt failed before hitting the Worker because the Docker terminal executed only pasted continuation lines (`-H ...`), causing `bash: -H: command not found`; use one-line curl commands in Dokploy terminal.
     - User asked whether the convenience URL can be opened directly in a browser with the API key as a query parameter; current implementation intentionally rejects query-string API keys and requires `Authorization: Bearer` or `X-API-Key` headers.
+    - User requested an env parameter to decide whether API keys are needed, to temporarily allow browser address-bar usage while image conversion remains disabled.
   - Now:
-    - Explaining browser usage options for authenticated convenience URLs.
+    - Implementing existing `REQUIRE_AUTH=false` + `ALLOW_ANON=true` as explicit anonymous mode in auth middleware and preflight/tests/docs.
   - Next:
-    - Use curl/API clients/header-setting browser extension or build a small authenticated UI/signed-link flow if direct browser address-bar usage is required.
+    - Verify, commit, push, then tell the user exact Cloudflare/Dokploy env values to toggle public browser use.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.

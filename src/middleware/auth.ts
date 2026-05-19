@@ -1,7 +1,9 @@
 import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { isAdminAuthorized, readBearerToken } from "../auth/admin";
+import { allowsAnonymousRequests, anonymousApiKey } from "../auth/anonymous";
 import { getApiKeyByRawKey, readApiKeyFromRequest, touchApiKeyLastUsed } from "../auth/api-keys";
+import { parseConfig } from "../config";
 import { ConvertingError } from "../http/errors";
 import type { ApiKey } from "../types/api";
 import type { AppEnv } from "../types/env";
@@ -18,8 +20,13 @@ export const requireAdminToken = createMiddleware<AppEnv>(async (c, next) => {
 });
 
 export async function authenticateApiKey(c: Context<AppEnv>): Promise<ApiKey> {
+  const config = parseConfig(c.env);
   const rawApiKey = readApiKeyFromRequest(c.req.raw);
   if (!rawApiKey) {
+    if (allowsAnonymousRequests(config)) {
+      return anonymousApiKey();
+    }
+
     throw new ConvertingError("missing_api_key", "Missing API key.", 401);
   }
 

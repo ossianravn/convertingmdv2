@@ -222,21 +222,17 @@ NIXPACKS_INSTALL_CMD=npm run install:deploy-runner
 
 Route `converting.md/*` to the Worker in Cloudflare.
 
-## Safety Defaults
+## Auth Modes
 
-- `REQUIRE_AUTH=true`
-- `ALLOW_ANON=false`
-- `DISABLE_IMAGE_CONVERSION=true`
-- Browser Run is disabled per key unless explicitly allowed.
-- Auto browser fallback is disabled by default.
-- Browser mode blocks image, font, and media assets by default.
-- HTML pages should not fetch linked images for AI description in v1.
+Private mode is the default: `REQUIRE_AUTH=true` and `ALLOW_ANON=false`.
+Temporary browser address-bar mode is explicit: set `REQUIRE_AUTH=false` and
+`ALLOW_ANON=true`. Anonymous traffic is tracked as `anon_public`; Browser Run
+and image conversion stay disabled for anonymous requests.
 
 ## Production Checklist
 
-- `REQUIRE_AUTH=true`
-- `ALLOW_ANON=false`
 - `DISABLE_IMAGE_CONVERSION=true` unless intentionally enabled
+- choose private or anonymous auth mode explicitly
 - personal and test keys have conservative limits
 - Browser Run is enabled only for trusted keys
 - `ADMIN_TOKEN` and `API_KEY_PEPPER` are strong random secrets

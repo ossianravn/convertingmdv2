@@ -17,7 +17,7 @@ describe("deploy config preflight", () => {
         vars: {
           ENVIRONMENT: "development",
           REQUIRE_AUTH: "false",
-          ALLOW_ANON: "true",
+          ALLOW_ANON: "false",
           DISABLE_IMAGE_CONVERSION: "false"
         }
       })
@@ -25,14 +25,32 @@ describe("deploy config preflight", () => {
 
     expect(issues).toEqual([
       { path: "vars.ENVIRONMENT", message: 'ENVIRONMENT must be "production".' },
-      { path: "vars.REQUIRE_AUTH", message: 'REQUIRE_AUTH must be "true".' },
-      { path: "vars.ALLOW_ANON", message: 'ALLOW_ANON must be "false".' },
-      { path: "vars.DISABLE_IMAGE_CONVERSION", message: 'DISABLE_IMAGE_CONVERSION must be "true".' }
+      { path: "vars.DISABLE_IMAGE_CONVERSION", message: 'DISABLE_IMAGE_CONVERSION must be "true".' },
+      {
+        path: "vars.REQUIRE_AUTH",
+        message:
+          'auth mode must be either REQUIRE_AUTH="true"/ALLOW_ANON="false" or REQUIRE_AUTH="false"/ALLOW_ANON="true".'
+      }
     ]);
   });
 
   it("accepts real resource IDs and safe production vars", () => {
     expect(findDeployConfigIssues(validConfig({}))).toEqual([]);
+  });
+
+  it("accepts explicit anonymous production mode with image conversion disabled", () => {
+    expect(
+      findDeployConfigIssues(
+        validConfig({
+          vars: {
+            ENVIRONMENT: "production",
+            REQUIRE_AUTH: "false",
+            ALLOW_ANON: "true",
+            DISABLE_IMAGE_CONVERSION: "true"
+          }
+        })
+      )
+    ).toEqual([]);
   });
 });
 
