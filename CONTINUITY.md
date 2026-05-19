@@ -170,10 +170,12 @@
     - Updated `wrangler.jsonc` to deploy the requested temporary browser address-bar mode: `REQUIRE_AUTH=false` and `ALLOW_ANON=true`, while keeping `DISABLE_IMAGE_CONVERSION=true`.
     - Updated README and release readiness notes to document that the current production Wrangler config is public anonymous mode and how to restore private mode.
     - Verification passed after the auth-mode config update: `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run verify:release`.
+    - Committed and pushed the auth-mode config update as `aca16ab` (`Deploy anonymous address-bar mode`) to `origin/main`.
+    - Final live verification passed: `curl -i https://converting.md/https://animalworld.dk/hundetrimmer-test/` returned HTTP 200 `text/markdown`, `X-Converting-Method: ai`, and source content type `text/html; charset=UTF-8`.
   - Now:
-    - Preparing to commit and push the auth-mode deployment config update.
+    - Live production conversion is working for the reported URL.
   - Next:
-    - After the config update deploys, re-test the live `converting.md` conversion URL and confirm it returns Markdown rather than auth or AI-shape errors.
+    - Monitor quota/cache behavior and restore private mode later by setting `REQUIRE_AUTH=true` and `ALLOW_ANON=false` when browser address-bar mode is no longer desired.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.
