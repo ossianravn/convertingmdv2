@@ -201,8 +201,9 @@
     - Added regression coverage for entity decoding, Unicode normalization, code preservation, native/AI/browser/cached normalization, and charset-aware text body decoding.
     - Updated README, release readiness, and acceptance matrix docs with the normalization contract.
     - Verification passed after normalization work: focused normalization/cache/source tests, `npm run verify:release` (24 test files, 94 tests, audit 0 vulnerabilities, deploy dry-run passed, health smoke passed), and `npm run deploy:preflight`.
+    - Committed and pushed the normalization implementation as `ab0f2c1` (`Normalize converted markdown text`) to `origin/main`.
   - Now:
-    - Committing and pushing the verified normalization implementation to `origin/main`.
+    - Normalization implementation is complete, verified, committed, and pushed; only the continuity follow-up remains to publish.
   - Next:
     - Deploy when ready so live EDC convenience output bypasses the old encoded cache.
 
