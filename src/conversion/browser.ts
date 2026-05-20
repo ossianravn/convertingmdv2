@@ -36,7 +36,7 @@ export async function tryBrowserMarkdown(
       throw new ConvertingError("cloudflare_api_error", "Browser Run Markdown conversion failed.", 502);
     }
 
-    const markdown = await response.text();
+    const markdown = await readBrowserMarkdown(response);
     const browserMsUsed = readBrowserMs(response, config.maxBrowserMsPerRequest);
     await commitBrowserUsage(env, reservation, browserMsUsed, now);
     committed = true;
@@ -78,6 +78,10 @@ function browserBody(request: MarkdownRequest): Record<string, unknown> {
       waitUntil: request.browser.waitUntil,
       timeout: 10000
     },
+    ...(request.browser.waitForSelector
+      ? { waitForSelector: { selector: request.browser.waitForSelector, timeout: 10000 } }
+      : {}),
+    ...(request.browser.userAgent ? { userAgent: request.browser.userAgent } : {}),
     ...(request.browser.blockAssets ? { rejectRequestPattern: [assetBlockPattern()] } : {})
   };
 }
@@ -92,4 +96,24 @@ function readBrowserMs(response: Response, fallback: number): number {
 
   const value = Number(rawValue);
   return Number.isSafeInteger(value) && value >= 0 ? value : fallback;
+}
+
+async function readBrowserMarkdown(response: Response): Promise<string> {
+  const text = await response.text();
+  const contentType = response.headers.get("Content-Type") ?? "";
+  if (!contentType.toLowerCase().includes("application/json")) return text;
+
+  let value: unknown;
+  try {
+    value = JSON.parse(text) as unknown;
+  } catch {
+    throw new ConvertingError("cloudflare_api_error", "Browser Run returned invalid JSON.", 502);
+  }
+  if (isBrowserJsonResult(value)) return value.result;
+
+  throw new ConvertingError("cloudflare_api_error", "Browser Run returned an unexpected Markdown shape.", 502);
+}
+
+function isBrowserJsonResult(value: unknown): value is { result: string } {
+  return typeof value === "object" && value !== null && typeof (value as { result?: unknown }).result === "string";
 }

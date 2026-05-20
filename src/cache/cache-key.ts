@@ -3,7 +3,7 @@ import { sha256Hex } from "../utils/crypto";
 
 export async function createMarkdownCacheKey(normalizedUrl: string, request: MarkdownRequest): Promise<string> {
   const digest = await sha256Hex(JSON.stringify(cacheKeyPayload(normalizedUrl, request)));
-  return `md:v2:${digest}`;
+  return `md:v3:${digest}`;
 }
 
 function cacheKeyPayload(normalizedUrl: string, request: MarkdownRequest): Record<string, unknown> {
@@ -11,12 +11,13 @@ function cacheKeyPayload(normalizedUrl: string, request: MarkdownRequest): Recor
     url: normalizedUrl,
     mode: request.mode,
     cssSelector: request.ai.cssSelector,
+    browserEnabled: request.browser.enabled,
     browserWaitUntil: request.browser.waitUntil,
     browserWaitForSelector: request.browser.waitForSelector,
     browserBlockAssets: request.browser.blockAssets,
     userAgent: request.browser.userAgent,
     imageLanguage: request.ai.imageDescriptionLanguage,
     allowImages: request.ai.allowImages,
-    outputFormatVersion: 2
+    outputFormatVersion: 3
   };
 }

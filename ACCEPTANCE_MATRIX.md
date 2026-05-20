@@ -52,12 +52,13 @@ Covered criteria:
 Evidence:
 
 - Implementation: `src/cache/*`, `src/conversion/orchestrator.ts`.
-- Tests: `test/cache.test.ts`, `test/orchestrator.test.ts`, `test/route-acceptance.test.ts`.
+- Tests: `test/cache.test.ts`, `test/orchestrator.test.ts`, `test/browser-fallback.test.ts`, `test/route-acceptance.test.ts`.
 
 Covered criteria:
 
 - Same URL/options can hit cache on the second request.
 - Different conversion options create different cache keys.
+- Browser-enabled fallback cache keys are separate from default non-browser cache keys.
 - Cache hits avoid conversion/fetch calls and reconstruct response headers.
 - Oversized output is not cached.
 
@@ -66,14 +67,15 @@ Covered criteria:
 Evidence:
 
 - Implementation: `src/conversion/native.ts`, `src/conversion/ai.ts`, `src/conversion/browser.ts`, `src/conversion/orchestrator.ts`.
-- Tests: `test/conversion-edge.test.ts`, `test/browser-budget.test.ts`, `test/image-quota.test.ts`, `test/orchestrator.test.ts`, `test/route-modes.test.ts`.
+- Tests: `test/conversion-edge.test.ts`, `test/browser-budget.test.ts`, `test/browser-fallback.test.ts`, `test/image-quota.test.ts`, `test/orchestrator.test.ts`, `test/quality.test.ts`, `test/route-modes.test.ts`, `test/source-profile.test.ts`.
 
 Covered criteria:
 
 - Native Markdown captures `x-markdown-tokens`, rejects HTML fallback cases, and enforces output byte limits.
 - Workers AI receives HTML hostname and `cssSelector` options, blocks images by default, and exposes token counts when returned.
-- Browser Run requires explicit key permission, sends the expected Cloudflare REST body with wait options and asset blocking, records `X-Browser-Ms-Used`, charges reserved max when usage is missing, respects `DISABLE_BROWSER`, and releases reservations on failure.
-- Auto mode performs native-to-AI fallback and only uses Browser Run fallback when request, key, and config allow it.
+- Browser Run requires explicit key permission, sends the expected Cloudflare REST body with wait, selector/user-agent, and asset-blocking options, records `X-Browser-Ms-Used`, unwraps JSON Markdown responses, charges reserved max when usage is missing, respects `DISABLE_BROWSER`, and releases reservations on failure.
+- Auto mode performs native-to-AI fallback and only uses Browser Run fallback when request, key, config, and quality signals allow it.
+- Weak AI output from JavaScript app shells, metadata-only pages, JavaScript-required pages, or boilerplate-only pages is detected without relying on English-only content.
 
 ## Routes, Responses, and Events
 

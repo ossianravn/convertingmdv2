@@ -12,11 +12,8 @@ This repository implements the v1 Worker foundation:
 - D1 migration for API keys, usage counters, and conversion events
 - API-key hashing helpers that store hashes only
 - URL security, limited fetch, cache, conversion, and quota modules split by responsibility
-- native Markdown, Workers AI, and Browser Run conversion strategies
-- request quotas, Browser Run browser-ms reservations, and image-conversion quota gates
-- Markdown result cache with cache-hit short-circuiting
-- conversion event logging that stores URL hashes and hostnames, not raw target URLs
-- file-line enforcement for TypeScript files
+- native, Workers AI, and Browser Run strategies with guarded browser-ms reservations and image quota gates
+- Markdown result cache plus conversion events that store URL hashes and hostnames, not raw target URLs
 
 Conversion routes authenticate first, charge request quota, check cache, then use the selected conversion mode. Browser Run and image conversion remain fail-closed behind global config and per-key capability checks.
 
@@ -117,6 +114,8 @@ ai       Workers AI toMarkdown strategy only
 browser  Browser Run /markdown strategy only
 ```
 
+In `mode=auto`, weak AI output from JavaScript app shells, metadata-only pages, or boilerplate-only pages can fall back to Browser Run only when `browser.enabled=true` and the API key has both `allowBrowser=true` and `autoBrowserFallback=true`. `GET` and convenience routes use default non-browser options. Browser-enabled cache keys are separate from default cache keys.
+
 Successful conversion responses include:
 
 ```txt
@@ -130,6 +129,7 @@ X-RateLimit-Remaining-Day
 X-RateLimit-Remaining-Month
 X-Markdown-Tokens
 X-Browser-Ms-Used
+X-Converting-Warnings
 ```
 
 ## Admin Key Creation

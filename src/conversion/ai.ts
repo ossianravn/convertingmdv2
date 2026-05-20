@@ -7,6 +7,7 @@ import type { ApiKey, MarkdownRequest } from "../types/api";
 import type { AiMarkdownDocument, AiToMarkdownOptions, Env } from "../types/env";
 import { byteLength } from "../utils/bytes";
 import type { ConversionResult } from "./result";
+import { htmlSourceWarnings } from "./source-profile";
 
 export async function tryAiMarkdown(
   env: Env,
@@ -24,6 +25,7 @@ export async function tryAiMarkdown(
   });
   const sourceContentType = fetched.response.headers.get("Content-Type");
   const imageRequest = isImageRequest(fetched.url, sourceContentType);
+  const warnings = htmlSourceWarnings(fetched.body, sourceContentType);
 
   if (imageRequest) {
     await enforceImageQuota(env, apiKey, config, new Date());
@@ -50,7 +52,7 @@ export async function tryAiMarkdown(
     outputBytes,
     inputBytes: fetched.bytesRead,
     sourceContentType,
-    warnings: [],
+    warnings,
     requestId
   };
 }

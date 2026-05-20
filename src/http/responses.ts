@@ -52,6 +52,7 @@ function conversionHeaders(result: ConversionResult, requestId: string, rateLimi
   if (result.sourceContentType) headers.set("X-Converting-Source-Content-Type", result.sourceContentType);
   if (result.tokens !== null) headers.set("X-Markdown-Tokens", String(result.tokens));
   if (result.browserMsUsed > 0) headers.set("X-Browser-Ms-Used", String(result.browserMsUsed));
+  if (result.warnings.length > 0) headers.set("X-Converting-Warnings", result.warnings.join(","));
   if (rateLimit) {
     headers.set("X-RateLimit-Remaining-Day", String(rateLimit.dailyRemaining));
     headers.set("X-RateLimit-Remaining-Month", String(rateLimit.monthlyRemaining));

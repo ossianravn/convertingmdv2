@@ -1,6 +1,6 @@
 # Release Readiness
 
-Date: 2026-05-19
+Date: 2026-05-20
 
 This artifact records the local release evidence for the ConvertingMD v1 Worker. It does not replace the README; it is the short handoff checklist for deploy/publish.
 
@@ -19,12 +19,12 @@ API_KEY_PEPPER=pepper npm run create-local-key
 Latest local results:
 
 - `npm --cache /tmp/npm-cache ci --ignore-scripts`: passed and left `package-lock.json` unchanged.
-- `npm run check`: passed with 19 test files and 75 tests.
+- `npm run check`: passed with 22 test files and 90 tests.
 - `npm run check:env-hygiene`: passed for `.dev.vars.example` placeholders and local env ignore rules.
 - `npm run check:prd-docs`: passed for split PRD manifest metadata and line budgets.
 - `npm --cache /tmp/npm-cache audit`: passed with 0 vulnerabilities.
 - `npm run deploy:dry-run`: passed and produced a Worker bundle without publishing.
-- `npm run deploy:preflight`: expected to fail until placeholder D1/KV IDs are replaced.
+- `npm run deploy:preflight`: passed with the configured production D1/KV binding IDs.
 - `npm run smoke:health`: passed against local Wrangler `/healthz`.
 - `npm run verify:release`: passed and runs the check, env hygiene, PRD-doc, audit, deploy dry-run, and health-smoke gates together.
 - `API_KEY_PEPPER=pepper npm run create-local-key`: passed and generated a local test key/hash pair.
@@ -52,7 +52,7 @@ Before a real deployment:
   `REQUIRE_AUTH=false` and `ALLOW_ANON=true`. Restore private mode by setting
   `REQUIRE_AUTH=true` and `ALLOW_ANON=false`.
 - Keep `DISABLE_IMAGE_CONVERSION=true` unless intentionally enabling image conversion.
-- Enable Browser Run only for trusted API keys with conservative browser-ms limits.
+- Enable Browser Run only for trusted API keys with conservative browser-ms limits; automatic fallback still requires `browser.enabled=true`, `allowBrowser=true`, and `autoBrowserFallback=true`.
 - Confirm `ADMIN_TOKEN` and `API_KEY_PEPPER` are strong random values.
 
 ## Deploy Sequence
@@ -85,5 +85,4 @@ After deploy:
 
 ## Known External Blockers
 
-- This workspace is not a usable git repository, so local git status/commit/push cannot be verified here.
 - Real Cloudflare deployment requires account access, generated binding IDs, and production secrets.

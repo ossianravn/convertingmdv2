@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
-- Diagnose the live `https://converting.md/https://eb.dk` conversion-quality issue where the user sees a lot of non-content text that looks like JS/HTML rather than clean Markdown.
-- Success means we can classify whether this is a Cloudflare Markdown conversion limitation, target-page/source issue, or a Worker preprocessing/routing issue, and choose the next fix if needed.
+- Implement a guarded Browser Run fallback flow for conversion quality failures, including JS-rendered app shells, boilerplate-only AI output, cache semantics, language-agnostic output, and strict auth/quota guards.
+- Success means trusted authenticated requests can fall back to Browser Run when AI output is weak, anonymous traffic remains protected, edge cases are covered by tests, and release checks pass.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -181,17 +181,29 @@
     - Committed and pushed the native/cache fix as `9b5b6d0` (`Reject HTML in native markdown path`) to `origin/main`.
     - Final live `eb.dk` verification after deploy returned HTTP 200 `text/markdown`, `X-Converting-Cache: MISS`, `X-Converting-Method: ai`, source content type `text/html;charset=UTF-8`, and a 40 KB Markdown body instead of the old 733 KB raw HTML/native cache hit.
     - Remaining `eb.dk` noisiness is a content-extraction limitation for a dense news homepage, not the original raw HTML/native cache bug.
+    - Loaded `.dev-docs/context/WORKING.md` for the next investigation session.
+    - Reviewed `.git-local` worktree status: tracked dirty file is `CONTINUITY.md`; `.dev-docs/context/` is untracked handoff material.
+    - Reproduced `https://converting.md/https://www.geminixprize.com/`: HTTP 200 cache hit, method `ai`, 499-byte Markdown containing metadata plus cookie banner only.
+    - Fetched the origin HTML for `https://www.geminixprize.com/`: it contains `<div id="root"></div>`, a small `<noscript>` fallback, cookie-banner markup, and deferred `/sections.js` + `/app.js`; the page content visible in the screenshot lives mainly in JavaScript.
+    - Confirmed anonymous live Browser Run is intentionally blocked: POST `/v1/markdown` with `mode=browser` and `browser.enabled=true` returned `403 browser_not_allowed`.
+    - Implemented guarded auto-mode Browser Run fallback: weak AI/cache output can trigger Browser Run only when `browser.enabled=true`, the key has `allowBrowser=true` and `autoBrowserFallback=true`, `DISABLE_BROWSER=false`, and reservation/budget checks pass.
+    - Added source profiling for JS app shells, low visible text, script-heavy HTML, and cookie shells; AI results carry source warning codes.
+    - Expanded Markdown quality assessment for empty output, source-relative short output, frontmatter-dominant metadata output, boilerplate-only output, JavaScript-required messages across several languages, and conversion error markers.
+    - Browser fallback now bypasses weak non-browser cache entries only for eligible trusted requests, avoids caching weak AI output, keeps browser-enabled cache keys separate via `md:v3`, and emits `X-Converting-Warnings`.
+    - Browser Run request bodies now forward `waitForSelector` and `userAgent`; Browser Run JSON `{ result }` responses are unwrapped before returning/caching Markdown.
+    - Added tests: `test/browser-fallback.test.ts`, `test/quality.test.ts`, and `test/source-profile.test.ts`; updated cache/browser tests and docs.
+    - Verification passed: focused fallback/cache/browser tests, `npm run check` (22 test files, 90 tests), `npm run verify:release`, `npm run deploy:preflight`, and `npm run check:file-lines`.
   - Now:
-    - Live `eb.dk` conversion no longer returns raw HTML from native cache; it returns AI Markdown with homepage/layout noise.
+    - Guarded fallback implementation is complete and verified locally.
   - Next:
-    - Consider a separate content-cleanup/readability layer or Browser Run/readability mode for dense homepages and JS-heavy sites.
+    - Optional next step is to deploy the Worker, then create or update a trusted API key with Browser Run permission and test `mode=auto` POST requests with `browser.enabled=true` against JS-heavy pages such as `geminixprize.com`.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- UNCONFIRMED: Whether Cloudflare has accepted `converting.md` as a root Custom Domain for the Worker.
 - UNCONFIRMED: Whether production secrets are visible in the Cloudflare Worker settings after the Dokploy/Wrangler deployment.
 
 # Working set (files/ids/commands):
 - `.dev-docs/converting-md-prd-split/00-index.md`
+- `.dev-docs/context/WORKING.md`
 - `.dev-docs/converting-md-prd-split/*.md`
 - `CONTINUITY.md`
 - `package.json`
@@ -221,10 +233,18 @@
 - `test/route-acceptance.test.ts`
 - `src/usage/events.ts`
 - `src/usage/conversions.ts`
+- `src/conversion/source-profile.ts`
+- `src/conversion/quality.ts`
 - `test/route-modes.test.ts`
+- `test/browser-fallback.test.ts`
+- `test/quality.test.ts`
+- `test/source-profile.test.ts`
 - `test/fetch-limits.test.ts`
 - `test/conversion-edge.test.ts`
 - `README.md`
+- `/tmp/geminixprize-source.html`
+- `/tmp/geminixprize-converted.md`
+- `/tmp/geminixprize-sections.js`
 - `RELEASE_READINESS.md`
 - `ACCEPTANCE_MATRIX.md`
 - `.github/workflows/check.yml`

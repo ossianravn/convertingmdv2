@@ -38,8 +38,18 @@ describe("markdown cache", () => {
       markdownRequest({ ai: { cssSelector: "main" } })
     );
 
-    expect(plainKey.startsWith("md:v2:")).toBe(true);
+    expect(plainKey.startsWith("md:v3:")).toBe(true);
     expect(selectedKey).not.toBe(plainKey);
+  });
+
+  it("separates browser-enabled fallback cache from default non-browser requests", async () => {
+    const defaultKey = await createMarkdownCacheKey("https://example.com/page", markdownRequest({}));
+    const browserKey = await createMarkdownCacheKey(
+      "https://example.com/page",
+      markdownRequest({ browser: { enabled: true } })
+    );
+
+    expect(browserKey).not.toBe(defaultKey);
   });
 
   it("does not cache conversions that fail the output byte limit", async () => {

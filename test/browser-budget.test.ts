@@ -39,6 +39,21 @@ describe("browser budget reservations", () => {
     expect(periodCounter(d1.counters, "global", "day")?.browser_requests).toBe(1);
   });
 
+  it("unwraps JSON Browser Run markdown responses", async () => {
+    const d1 = createMemoryD1();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ success: true, result: "# Browser JSON" }), {
+        headers: { "Content-Type": "application/json", "X-Browser-Ms-Used": "88" }
+      }))
+    );
+
+    const result = await callBrowser(d1, { allowBrowser: true });
+
+    expect(result.markdown).toBe("# Browser JSON");
+    expect(result.browserMsUsed).toBe(88);
+  });
+
   it("sends the Browser Run endpoint, auth header, goto options, and asset block pattern", async () => {
     const d1 = createMemoryD1();
     const fetchSpy = browserFetchSpy();
@@ -62,18 +77,25 @@ describe("browser budget reservations", () => {
     });
   });
 
-  it("omits asset blocking and forwards explicit waitUntil when requested", async () => {
+  it("omits asset blocking and forwards explicit waitUntil, selector, and user agent when requested", async () => {
     const d1 = createMemoryD1();
     const fetchSpy = browserFetchSpy();
     vi.stubGlobal("fetch", fetchSpy);
 
-    await callBrowser(d1, { allowBrowser: true }, { waitUntil: "networkidle2", blockAssets: false });
+    await callBrowser(d1, { allowBrowser: true }, {
+      waitUntil: "networkidle2",
+      waitForSelector: "main",
+      userAgent: "ConvertingMD-Test",
+      blockAssets: false
+    });
 
     const [, init] = firstFetchCall(fetchSpy);
     const body = JSON.parse(String(init.body));
     expect(body).toEqual({
       url: "https://example.com/page",
-      gotoOptions: { waitUntil: "networkidle2", timeout: 10000 }
+      gotoOptions: { waitUntil: "networkidle2", timeout: 10000 },
+      waitForSelector: { selector: "main", timeout: 10000 },
+      userAgent: "ConvertingMD-Test"
     });
   });
 
