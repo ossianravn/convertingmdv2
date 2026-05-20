@@ -30,10 +30,11 @@
     - Added `CLOUDFLARE_SETUP.md` with a 12-step setup flow covering local preparation, auth mode, D1, KV, Workers AI binding, secrets, verification, remote migration, deploy, custom domain, production smoke tests, and operations.
     - Linked `CLOUDFLARE_SETUP.md` from the README Cloudflare Setup section.
     - Verification passed after guide changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run check:prd-docs`.
+    - Committed and pushed `0d08fb6` (`Add Cloudflare setup guide`) to `origin/main`.
   - Now:
-    - Staging and committing the setup guide changes.
+    - Updating continuity after the guide push.
   - Next:
-    - Push to `origin/main` and report final state.
+    - Report final state to the user.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None.
@@ -53,3 +54,4 @@
 - `package-lock.json`
 - Commit `68edf60`
 - `CLOUDFLARE_SETUP.md`
+- Commit `0d08fb6`
