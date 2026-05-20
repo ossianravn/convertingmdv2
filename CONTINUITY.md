@@ -1,266 +1,50 @@
 # Goal (incl. success criteria):
-- Implement API-level Markdown text normalization so clients receive decoded, Unicode-normalized text instead of HTML character references like `p&#xE5;`.
-- Success means native, AI, Browser Run, cached, Markdown, and JSON responses share the same normalization policy; multilingual text is preserved; tests cover entities and Unicode normalization; release checks pass.
+- Commit and push the README/open-source update, selecting a standard OSS license that fits the repository.
+- Success means the repo has a standard license file, package metadata and README agree on the license, release checks pass, and the resulting commit is pushed to `origin/main`.
 
 # Constraints/Assumptions:
-- Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
-- Follow workspace rules: fail closed, no raw API-key storage, image conversion disabled by default, Browser Run only after auth/quota/browser-ms reservation, tests must mock Cloudflare Workers AI and Browser Run.
-- Use `proper-ui` for any UI-facing work and preserve existing design conventions.
+- Read `.dev-docs/converting-md-prd-split/00-index.md` first; for this docs task, use focused PRD docs `04-cloudflare-config-deployment.md` and `11-readme-ops-defaults.md`.
+- Read `.dev-docs/context/WORKING.md` before editing; latest handoff says normalization was committed/pushed at `745cd9b`, production still needs deploy for normalized `md:v4` output.
+- Current production Wrangler config is temporary browser address-bar mode: `REQUIRE_AUTH=false`, `ALLOW_ANON=true`; Browser Run and image conversion remain protected.
+- Keep files under 300 lines without line-squeezing; split or rewrite by responsibility where needed.
 - Do not edit `AGENTS.md`, reset the database, use `git checkout`, or revert user changes without explicit confirmation.
-- Keep source files under 300 lines, prefer under 250, and split by responsibility instead of line-squeezing.
+- `.git` is not usable in this sandbox; use `GIT_DIR=.git-local GIT_WORK_TREE=.` for git inspection.
+- Use `.git-local` for commit/push operations; `.dev-docs/context/` is untracked handoff material and should not be swept into the commit unless explicitly requested.
 
 # Key decisions:
-- Proceed with a fresh npm/TypeScript Cloudflare Worker scaffold because the workspace has no existing package, source, lockfile, or app code.
-- The sandbox exposes `.git` as an empty read-only tmpfs, so the initial commit/push uses an explicit ignored `.git-local/` git directory for repository metadata.
-- Use Hono for routing rather than a custom router, matching the PRD option and the repo instruction to prefer proven OSS.
-- Start with PRD Phases 1-2 plus a fail-closed route skeleton for later phases, keeping all modules small.
-- Count every authenticated markdown conversion request before conversion orchestration; conversion remains fail-closed until cache/strategy wiring and quota gates for browser/image are complete.
-- Use a small in-memory D1 test double split by responsibility for route-level auth/admin/quota coverage.
-- Browser Run strategy owns its reservation lifecycle: reserve before Cloudflare call, commit actual or reserved usage on success, release reservation on failure.
-- Image conversion charges image quota before Workers AI image conversion and passes image conversion options only for image requests.
-- Orchestrator now owns normalized URL, cache read/write, mode selection, and native/AI/browser fallback policy; routes remain thin.
-- Conversion event logging happens in the shared markdown handler after auth/request parsing; event rows store URL hashes and host only, never raw target URLs.
-- Successful conversion responses include request quota remaining headers from the pre-conversion quota check.
-- Native/AI method counters and byte counters are updated in shared usage code for non-cache conversions; Browser Run request/ms counters remain owned by the reservation lifecycle to avoid double counting.
-- README now describes the active v1 implementation rather than an inactive scaffold.
+- Treat the README opening as end-user facing: lead with `https://converting.md/https://example.com/page`, then explain that the repo can also run private API-key mode.
+- Keep open-source messaging factual and operational; do not leak agent/developer handoff context into the README.
+- Use the MIT License: it is a standard permissive OSS license with SPDX identifier `MIT`, fits a reusable Cloudflare Worker app, and avoids adding copyleft obligations.
 
 # State:
   - Done:
-    - Loaded `.dev-docs/converting-md-prd-split/00-index.md`.
-    - Read all split PRD files in full in the required order.
-    - Noted that `CONTINUITY.md` was missing and created it as the canonical ledger.
-    - Inspected current repo shape: no existing package/source files; `.git` directory is empty so git status is unavailable.
-    - Added npm/TypeScript Cloudflare Worker scaffold with Hono routing, Wrangler config, Vitest config, `.dev.vars.example`, README, D1 migration, source modules, scripts, and smoke tests.
-    - Added modular foundations for config, request IDs, standard errors/responses, API-key hashing/auth, admin routes, URL security, cache keys, conversion strategy entrypoints, and usage counters.
-    - Installed npm dependencies with lifecycle scripts disabled and generated `package-lock.json`.
-    - Added a targeted `ws` override for Wrangler's dev-tooling dependency graph; `npm audit` reports 0 vulnerabilities.
-    - Verification passed: `npm run check` (typecheck, 14 Vitest tests, file-line guard) and Wrangler local `/healthz` smoke test returned 200.
-    - Implemented request quota enforcement for daily/monthly per-key limits and key/global request counter increments.
-    - Added D1-backed tests for revoked keys, admin key create/list behavior, request counter increments, and daily/monthly quota failures.
-    - Split the D1 test fake into focused files; largest fake module is under 200 lines.
-    - Verification passed: `npm run check` (7 test files, 20 tests) and `npm --cache /tmp/npm-cache audit` reports 0 vulnerabilities.
-    - Implemented Browser Run daily/monthly per-key and global browser-ms budget reservation checks.
-    - Implemented Browser Run reservation commit/release helpers for actual ms used, missing usage headers, successful calls, and failed calls.
-    - Implemented image conversion quota checks and key/global image counter increments before Workers AI image conversion.
-    - Wired Browser Run reservations into `src/conversion/browser.ts` and image quota/options into `src/conversion/ai.ts`.
-    - Added focused tests for browser capability, global browser cap, reservation release, missing `X-Browser-Ms-Used`, image global disable, image key quota, global image quota, and image conversion options.
-    - Verification passed: `npm run check` (9 test files, 29 tests), file-line guard, and `npm --cache /tmp/npm-cache audit`.
-    - Implemented cache lookup/write around successful conversions with cache hits returning before source fetch or Cloudflare conversion calls.
-    - Implemented orchestrator mode flow: native-only, AI-only, browser-only, and auto mode with native-to-AI fallback and explicit browser fallback for failed/weak AI.
-    - Added memory KV fake and orchestrator tests for cache hit, cache write, native-to-AI fallback, and browser fallback allow/deny conditions.
-    - Updated quota route tests to stub source fetches explicitly after enabling real conversion flow.
-    - Verification passed: `npm run check` (10 test files, 34 tests), file-line guard, and `npm --cache /tmp/npm-cache audit`.
-    - Added conversion event storage for success, cache hit, and error outcomes using `conversion_events`.
-    - Wired event logging through the shared markdown handler for POST, GET, and convenience conversion routes.
-    - Extended the D1 test fake to capture `conversion_events`.
-    - Added route acceptance tests for markdown responses, JSON responses, cache-hit headers/events, convenience endpoint success, and invalid URL error logging.
-    - Verification passed: `npm run check` (11 test files, 39 tests), file-line guard, and `npm --cache /tmp/npm-cache audit`.
-    - Added `X-RateLimit-Remaining-Day` and `X-RateLimit-Remaining-Month` headers to successful conversion responses.
-    - Added conversion-specific usage counters for native/AI requests and input/output bytes, skipped on cache hits.
-    - Added route mode tests for native, AI, browser, and cache-hit accounting through public routes.
-    - Verification passed: `npm run check` (12 test files, 43 tests), file-line guard, and `npm --cache /tmp/npm-cache audit`.
-    - Added focused fetch-limit tests for validated redirects, blocked redirects, redirect depth, and source byte limit.
-    - Added focused conversion edge tests for native token/header behavior, native HTML rejection, native output byte limit, AI cssSelector options, AI unsupported content rejection, and disabled browser behavior.
-    - Updated README current-scope language to reflect active conversion orchestration, cache, quota gates, response headers, and event logging.
-    - Verification passed: `npm run check` (14 test files, 53 tests), file-line guard, and `npm --cache /tmp/npm-cache audit`.
-    - Added `src/usage/admin-report.ts` for admin-safe usage output with current day/month key/global summaries, camelCase counters, and recent conversion events without raw target URLs.
-    - Added `listConversionEvents()` in `src/usage/events.ts` and wired `GET /v1/admin/usage` to return counters, summaries, and recent safe events.
-    - Extended the D1 fake with conversion event row helpers, seeding, and descending event query behavior.
-    - Added admin usage tests, dedicated cache acceptance tests, and URL port rejection coverage.
-    - Verification passed: `npm run check` (15 test files, 59 tests), `npm --cache /tmp/npm-cache audit` (0 vulnerabilities), and Wrangler local `/healthz` smoke returned HTTP 200.
-    - Audited README, Wrangler config, env example, local setup, and ops PRD requirements for completion readiness.
-    - Updated README with local D1 migration, local admin key creation, local conversion call, admin usage summary call, and production checklist.
-    - Verification passed: `npm run check` (15 test files, 59 tests), `npm --cache /tmp/npm-cache audit` (0 vulnerabilities), `HOME=/tmp npm run deploy -- --dry-run --outdir /tmp/converting-md-dry-run`, and Wrangler local `/healthz` smoke returned HTTP 200.
-    - Added package scripts for D1 migrations, deploy dry-run, and local key generation; README now uses the migration/dry-run scripts and documents the local key hash helper.
-    - Renamed the stale markdown route "scaffold" test label and added explicit POST `/v1/markdown` missing-auth coverage with request ID header assertion.
-    - Verified no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers remain in README/package/config/source/test/script surfaces.
-    - Verification passed: `npm run check` (15 test files, 60 tests), `npm --cache /tmp/npm-cache audit` (0 vulnerabilities), `npm run deploy:dry-run`, `API_KEY_PEPPER=pepper npm run create-local-key`, and Wrangler local `/healthz` smoke returned HTTP 200.
-    - Added `RELEASE_READINESS.md` with verified gates, deploy prerequisites, deploy sequence, rollback notes, and external blockers.
-    - Verification passed after the release artifact: `npm run check` (15 test files, 60 tests), `npm --cache /tmp/npm-cache audit` (0 vulnerabilities), `npm run deploy:dry-run`, `API_KEY_PEPPER=pepper npm run create-local-key`, and Wrangler local `/healthz` smoke returned HTTP 200.
-    - Added `npm run verify:release` to run check, audit, and deploy dry-run as one release gate.
-    - Added `.github/workflows/check.yml` to run `npm ci --ignore-scripts` and `npm run verify:release` on pull requests and pushes to `main`.
-    - Updated `RELEASE_READINESS.md` to use the combined release gate and document the CI workflow.
-    - Verification passed after CI release-gate changes: `npm run verify:release` (15 test files, 60 tests, audit 0 vulnerabilities, deploy dry-run passed), `API_KEY_PEPPER=pepper npm run create-local-key`, and Wrangler local `/healthz` smoke returned HTTP 200.
-    - Validated clean install parity with `npm --cache /tmp/npm-cache ci --ignore-scripts`; `package-lock.json` SHA-256 stayed `227f53f8415c045a73b82cace6ba710f4b32f9469f78cd8901840a85ace01b85`.
-    - Updated `RELEASE_READINESS.md` to include clean install evidence.
-    - Verification passed after clean install parity: `npm run verify:release` (15 test files, 60 tests, audit 0 vulnerabilities, deploy dry-run passed), `API_KEY_PEPPER=pepper npm run create-local-key`, and Wrangler local `/healthz` smoke returned HTTP 200.
-    - Added `scripts/smoke-health.ts`, a typed local Wrangler smoke runner that starts `wrangler dev --local`, checks `/healthz`, validates the request ID header, and stops the dev process.
-    - Wired `npm run smoke:health` into `npm run verify:release`.
-    - Updated README and `RELEASE_READINESS.md` so the release gate includes TypeScript, Vitest, file-line guard, audit, deploy dry-run, and local health smoke.
-    - Verification passed after automated health-smoke changes: `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm run verify:release` (15 test files, 60 tests, audit 0 vulnerabilities, deploy dry-run passed, smoke passed), `API_KEY_PEPPER=pepper npm run create-local-key`, no leftover Wrangler/workerd process, and no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers.
-    - Added `ACCEPTANCE_MATRIX.md` mapping PRD acceptance buckets to implementation, tests, release gates, and external-only completion items.
-    - Linked `ACCEPTANCE_MATRIX.md` from `RELEASE_READINESS.md`.
-    - Verification passed after acceptance traceability: `npm run verify:release` (15 test files, 60 tests, audit 0 vulnerabilities, deploy dry-run passed, health smoke passed), no leftover Wrangler/workerd process, and no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers.
-    - Added `scripts/check-deploy-config.ts`, a typed real-deploy preflight that rejects placeholder D1/KV binding IDs and unsafe production vars.
-    - Wired `predeploy` to run `npm run deploy:preflight` before real `npm run deploy`; `deploy:dry-run` and `verify:release` remain usable with local placeholders.
-    - Added `test/deploy-preflight.test.ts` for placeholder IDs, unsafe vars, and valid config.
-    - Updated README, `RELEASE_READINESS.md`, and `ACCEPTANCE_MATRIX.md` with deploy preflight behavior.
-    - Verification passed after deploy preflight: focused Vitest preflight tests (3 tests), expected placeholder failure from `npm run deploy:preflight`, `npm run verify:release` (16 test files, 63 tests, audit 0 vulnerabilities, deploy dry-run passed, health smoke passed), `npm --cache /tmp/npm-cache ci --ignore-scripts`, no leftover Wrangler/workerd process, no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers, and unchanged `package-lock.json` SHA-256.
-    - Added `scripts/check-env-hygiene.ts`, a typed release check for required `.dev.vars.example` secret placeholders and local env ignore rules.
-    - Added `test/env-hygiene.test.ts` and wired `npm run check:env-hygiene` into `npm run verify:release`.
-    - Updated README, `RELEASE_READINESS.md`, and `ACCEPTANCE_MATRIX.md` with env hygiene release-gate coverage.
-    - Verification passed after env hygiene: focused env hygiene script and Vitest test, `npm run check` (17 test files, 66 tests), `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm run verify:release` (env hygiene, audit 0 vulnerabilities, deploy dry-run, health smoke), expected placeholder failure from `npm run deploy:preflight`, no leftover Wrangler/workerd process, no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers, and unchanged `package-lock.json` SHA-256.
-    - Added `scripts/check-prd-docs.ts`, a typed split-PRD integrity check for manifest file list, file count, recorded line counts, and the 220-line PRD Markdown budget.
-    - Added `test/prd-docs.test.ts` and wired `npm run check:prd-docs` into `npm run verify:release`.
-    - Updated README, `RELEASE_READINESS.md`, and `ACCEPTANCE_MATRIX.md` with PRD-doc release-gate coverage.
-    - Verification passed after PRD-doc integrity: focused PRD-doc script and Vitest test, `npm run check` (18 test files, 68 tests), `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm run verify:release` (env hygiene, PRD docs, audit 0 vulnerabilities, deploy dry-run, health smoke), expected placeholder failure from `npm run deploy:preflight`, no leftover Wrangler/workerd process, no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers, and unchanged `package-lock.json` SHA-256.
-    - Added admin lifecycle route coverage for API-key rejection on admin routes, query-string admin token rejection, and `PATCH /v1/admin/api-keys/:id` revoke/reactivate plus quota/capability edits without raw key leakage.
-    - Updated README with the admin patch/revoke operation and `ACCEPTANCE_MATRIX.md` with stricter admin-auth coverage.
-    - Verification passed after admin lifecycle coverage: focused auth-admin tests (6 tests), `npm run check` (18 test files, 70 tests), `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm run verify:release` (env hygiene, PRD docs, audit 0 vulnerabilities, deploy dry-run, health smoke), expected placeholder failure from `npm run deploy:preflight`, no leftover Wrangler/workerd process, no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers, and unchanged `package-lock.json` SHA-256.
-    - Added route acceptance assertions for PRD response metadata: request ID, source content type, output bytes, standard JSON error content type, and error body request ID.
-    - Updated README response header list and `ACCEPTANCE_MATRIX.md` route/response evidence; kept README under 300 lines.
-    - Verification passed after response/header coverage: focused route-acceptance tests (5 tests), `npm run check` (18 test files, 70 tests), `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm run verify:release` (env hygiene, PRD docs, audit 0 vulnerabilities, deploy dry-run, health smoke), expected placeholder failure from `npm run deploy:preflight`, no leftover Wrangler/workerd process, no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers, and unchanged `package-lock.json` SHA-256.
-    - Added route acceptance coverage for `X-API-Key` auth on conversion routes and updated README/acceptance docs to state both supported auth headers.
-    - Verification passed after auth-header coverage: focused route-acceptance tests (6 tests), `npm run check` (18 test files, 71 tests), `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm run verify:release` (env hygiene, PRD docs, audit 0 vulnerabilities, deploy dry-run, health smoke), expected placeholder failure from `npm run deploy:preflight`, no leftover Wrangler/workerd process, no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers, and unchanged `package-lock.json` SHA-256.
-    - Added `src/middleware/query-string-auth.ts` and wired it globally so `?api_key=` is rejected before public, conversion, or admin route handling.
-    - Removed the conversion-only duplicate `?api_key=` guard from `src/middleware/auth.ts`.
-    - Added focused health/admin/markdown tests for global query-string API-key rejection and updated `ACCEPTANCE_MATRIX.md`.
-    - Verification passed after global query-string auth guard: focused auth-admin/health/markdown-route tests (13 tests), `npm run check` (18 test files, 72 tests), `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm run verify:release` (env hygiene, PRD docs, audit 0 vulnerabilities, deploy dry-run, health smoke), expected placeholder failure from `npm run deploy:preflight`, no leftover Wrangler/workerd process, no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers, and unchanged `package-lock.json` SHA-256.
-    - Refactored `scripts/create-local-key.ts` to export a testable `createLocalKeyPayload()` while preserving CLI output.
-    - Added `test/local-key-script.test.ts` covering `cmd_test_` local key format, prefix, and HMAC hash output.
-    - Updated `ACCEPTANCE_MATRIX.md` with local key helper coverage.
-    - Verification passed after local-key helper coverage: focused local-key-script test (1 test), `npm run check` (19 test files, 73 tests), `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm run verify:release` (env hygiene, PRD docs, audit 0 vulnerabilities, deploy dry-run, health smoke), expected placeholder failure from `npm run deploy:preflight`, no leftover Wrangler/workerd process, no TODO/FIXME/UNCONFIRMED/not-implemented/scaffold markers, and unchanged `package-lock.json` SHA-256.
-    - Added Browser Run request-shape tests for Cloudflare endpoint URL, bearer auth header, JSON body, `gotoOptions`, default asset blocking, `networkidle2`, and disabled asset blocking.
-    - Updated `ACCEPTANCE_MATRIX.md` with Browser Run REST body coverage.
-    - Verification passed after Browser Run request-shape coverage: focused browser-budget tests passed (7 tests), typecheck passed after typed fetch-spy cleanup, `npm run check` passed (19 test files, 75 tests), `npm --cache /tmp/npm-cache ci --ignore-scripts` passed, `npm run verify:release` passed (env hygiene, PRD docs, audit 0 vulnerabilities, deploy dry-run, health smoke), `npm run deploy:preflight` failed for the expected placeholder D1/KV IDs, no leftover Wrangler/workerd process remained, marker scan was clean, and `package-lock.json` SHA-256 stayed `227f53f8415c045a73b82cace6ba710f4b32f9469f78cd8901840a85ace01b85`.
-    - Initialized git metadata in ignored `.git-local/` because `.git` is mounted read-only in this sandbox.
-    - Added remote `origin` as `https://github.com/ossianravn/convertingmdv2.git`.
-    - Committed initial implementation as `eb14fbf` (`Initial converting.md worker implementation`) on `main` and pushed it to `origin/main`.
-    - Pushed the continuity-ledger follow-up commits so `origin/main` reflects the final publish state.
-    - Re-ran `npm run verify:release` before pushing: typecheck, 19 Vitest files/75 tests, file-line guard, env hygiene, PRD docs, npm audit, Wrangler deploy dry-run, and health smoke all passed.
-    - Replaced duplicate/placeholder Wrangler bindings with the real D1 ID under binding `DB` and the real KV ID under binding `CACHE_KV`.
-    - Verification after Wrangler binding fix: `npm run deploy:preflight` passed and focused `npm run test -- test/deploy-preflight.test.ts` passed (3 tests).
-    - Committed and pushed the binding fix as `228521a` (`Configure Cloudflare production bindings`) to `origin/main`.
-    - Diagnosed Dokploy build failure: Nixpacks used Node `18.20.5`, while Wrangler/Vitest/Rolldown require Node 22+ and failed on missing `node:util.styleText`.
-    - Added `.nvmrc` with `22.12.0` and package `engines.node >=22.12.0`; refreshed `package-lock.json` root metadata.
-    - Verification after Node pin: `npm run check` passed (19 files, 75 tests), `npm run check:env-hygiene` passed, and `npm run deploy:preflight` passed.
-    - Committed and pushed Node pin as `f965ee3` (`Pin Node version for Dokploy builds`) to `origin/main`.
-    - Diagnosed second Dokploy build failure: Node 22 is now active, but npm omitted Rolldown's Linux optional native binding `@rolldown/binding-linux-x64-gnu`, causing Vitest startup failure.
-    - Added `.npmrc` with `include=optional` so Nixpacks/npm installs optional native packages.
-    - Verification after npm optional-dependency fix: `npm --cache /tmp/npm-cache ci --ignore-scripts --include=optional` passed, `@rolldown/binding-linux-x64-gnu` resolved locally, `npm run check` passed (19 files, 75 tests), `npm run check:env-hygiene` passed, and `npm run deploy:preflight` passed.
-    - Diagnosed third Dokploy install failure: `NIXPACKS_INSTALL_CMD` was entered as `--include=optiona` and `engine-strict=true` rejected Dokploy's Node `22.11.0`.
-    - Removed `engine-strict` and relaxed root Node engine to `>=22.0.0` because Dokploy/Nixpacks selected Node `22.11.0`, which is sufficient for `node:util.styleText`; optional dependency installation remains forced.
-    - Verification after Node 22.11 compatibility fix: `npm --cache /tmp/npm-cache ci --ignore-scripts --include=optional` passed, `@rolldown/binding-linux-x64-gnu` resolved locally, `npm run check` passed (19 files, 75 tests), and `npm run deploy:preflight` passed.
-    - Committed and pushed the Node 22.11 compatibility fix as `ca40572` (`Relax Node engine for Dokploy builds`) to `origin/main`.
-    - User reported Dokploy still fails during `npm run check` with Vitest/Rolldown unable to find `@rolldown/binding-linux-x64-gnu`.
-    - User authorized server access for diagnosis. SSH config has working host `kpi-v2-panel` for `45.13.225.27` using `/home/ossian/.ssh/id_ed25519_codex`; the user-referenced `/home/ossian/.ssh/codex` key name appears different from the configured key path.
-    - Reproduced the exact missing `@rolldown/binding-linux-x64-gnu` failure on the server in a clean `node:22.11-bookworm` container after `npm ci --ignore-scripts --include=optional`.
-    - Confirmed the failure disappears when the Linux Rolldown binding is installed explicitly after `npm ci`; the same server/container then passes `npm run check` (19 files, 75 tests).
-    - Added `scripts/install-deploy-runner.mjs` and `npm run install:deploy-runner`; the helper runs `npm ci --ignore-scripts --include=dev --include=optional`, then installs the locked Rolldown Linux x64 binding only if npm omitted it.
-    - Updated README and `RELEASE_READINESS.md` to point Dokploy/Nixpacks at `NIXPACKS_INSTALL_CMD=npm run install:deploy-runner`.
-    - Verification after deploy-runner install fix: local `npm run install:deploy-runner` passed with writable npm cache, local `npm run check` passed (19 files, 75 tests), deploy preflight/env hygiene/PRD docs/audit passed, server clean `node:22.11-bookworm` replay passed with `npm run install:deploy-runner` plus `npm run check`, and `npm run verify:release` passed.
-    - Committed and pushed the deploy-runner install fix as `bc682dd` (`Fix Dokploy deploy runner install`) to `origin/main`.
-    - User showed Cloudflare dashboard screenshot with active `converting-md` Worker deployment, version `0ecc19dd`, deployed manually by Wrangler.
-    - User is on the Cloudflare “Connect to converting.md” modal; the correct choice for root-domain Worker ownership is `Custom Domains` with the subdomain field left empty.
-    - User reached D1 migration step in Dokploy Docker Terminal and ran `npx wrangler d1 migrations apply converting_md --remote` from `/`; Wrangler failed with “No configuration file found” because `wrangler.jsonc` is under the app directory, expected `/app`.
-    - User reran the migration from `/app`; `wrangler.jsonc` and `migrations/0001_init.sql` were present, and Wrangler returned `No migrations to apply!`, confirming the remote D1 migration state is current.
-    - Live `/healthz` responded `{"ok":true}` with a Cloudflare request ID.
-    - First API-key create attempt failed before hitting the Worker because the Docker terminal executed only pasted continuation lines (`-H ...`), causing `bash: -H: command not found`; use one-line curl commands in Dokploy terminal.
-    - User asked whether the convenience URL can be opened directly in a browser with the API key as a query parameter; current implementation intentionally rejects query-string API keys and requires `Authorization: Bearer` or `X-API-Key` headers.
-    - User requested an env parameter to decide whether API keys are needed, to temporarily allow browser address-bar usage while image conversion remains disabled.
-    - Reproduced the live bug with `curl -i https://converting.md/https://animalworld.dk/hundetrimmer-test/`: HTTP 500 with `conversion_failed` and `Cannot read properties of undefined (reading 'type')`.
-    - Confirmed the target URL returns `Content-Type: text/html; charset=UTF-8`, so native conversion correctly falls through to AI markdown conversion.
-    - Identified the root cause: local code passed a bare `Blob` to `env.AI.toMarkdown`, but Cloudflare Workers types require a Markdown document `{ name, blob }`.
-    - Added regression coverage that verifies HTML and image AI conversion pass a named document whose `blob.type` is the canonical source MIME type.
-    - Patched AI conversion to build `{ name, blob }` documents with safe filenames and normalized MIME types before calling Workers AI.
-    - Verification passed after the AI input-shape fix: `npm run check` (19 files, 78 tests), `npm run verify:release`, and `npm run deploy:preflight`.
-    - Committed and pushed the fix as `e078a41` (`Fix Workers AI markdown document input`) to `origin/main`.
-    - Immediate live probe still returned the same `Cannot read properties of undefined (reading 'type')` error, which means production had not yet redeployed the new Worker code.
-    - After redeploy, the live URL changed to `missing_api_key`, proving the AI crash fix reached production but `wrangler.jsonc` had redeployed private auth mode.
-    - Updated `wrangler.jsonc` to deploy the requested temporary browser address-bar mode: `REQUIRE_AUTH=false` and `ALLOW_ANON=true`, while keeping `DISABLE_IMAGE_CONVERSION=true`.
-    - Updated README and release readiness notes to document that the current production Wrangler config is public anonymous mode and how to restore private mode.
-    - Verification passed after the auth-mode config update: `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run verify:release`.
-    - Committed and pushed the auth-mode config update as `aca16ab` (`Deploy anonymous address-bar mode`) to `origin/main`.
-    - Final live verification passed: `curl -i https://converting.md/https://animalworld.dk/hundetrimmer-test/` returned HTTP 200 `text/markdown`, `X-Converting-Method: ai`, and source content type `text/html; charset=UTF-8`.
-    - Reproduced the `eb.dk` issue with `curl -sS -D /tmp/converting-eb.headers https://converting.md/https://eb.dk`: response was `CACHE HIT`, `X-Converting-Method: native`, `X-Converting-Source-Content-Type: text/html;charset=UTF-8`, and a 733 KB raw HTML-looking body.
-    - Root cause for the immediate issue: native conversion accepted HTML because its fallback `looksLikeMarkdown()` heuristic matched Markdown-shaped text inside page scaffolding/scripts.
-    - Patched native conversion to reject explicit HTML content types even if the body contains Markdown-shaped text.
-    - Bumped Markdown cache keys from `md:v1` to `md:v2` and `outputFormatVersion` to `2` so the polluted cached `eb.dk` entry is bypassed after deploy.
-    - Added regression tests for HTML-with-Markdown-shaped-script rejection and cache key versioning.
-    - Verification passed after the native/cache fix: focused `test/conversion-edge.test.ts test/cache.test.ts`, then `npm run verify:release` (19 files, 79 tests, env hygiene, PRD docs, audit, deploy dry-run, health smoke).
-    - Committed and pushed the native/cache fix as `9b5b6d0` (`Reject HTML in native markdown path`) to `origin/main`.
-    - Final live `eb.dk` verification after deploy returned HTTP 200 `text/markdown`, `X-Converting-Cache: MISS`, `X-Converting-Method: ai`, source content type `text/html;charset=UTF-8`, and a 40 KB Markdown body instead of the old 733 KB raw HTML/native cache hit.
-    - Remaining `eb.dk` noisiness is a content-extraction limitation for a dense news homepage, not the original raw HTML/native cache bug.
-    - Loaded `.dev-docs/context/WORKING.md` for the next investigation session.
-    - Reviewed `.git-local` worktree status: tracked dirty file is `CONTINUITY.md`; `.dev-docs/context/` is untracked handoff material.
-    - Reproduced `https://converting.md/https://www.geminixprize.com/`: HTTP 200 cache hit, method `ai`, 499-byte Markdown containing metadata plus cookie banner only.
-    - Fetched the origin HTML for `https://www.geminixprize.com/`: it contains `<div id="root"></div>`, a small `<noscript>` fallback, cookie-banner markup, and deferred `/sections.js` + `/app.js`; the page content visible in the screenshot lives mainly in JavaScript.
-    - Confirmed anonymous live Browser Run is intentionally blocked: POST `/v1/markdown` with `mode=browser` and `browser.enabled=true` returned `403 browser_not_allowed`.
-    - Implemented guarded auto-mode Browser Run fallback: weak AI/cache output can trigger Browser Run only when `browser.enabled=true`, the key has `allowBrowser=true` and `autoBrowserFallback=true`, `DISABLE_BROWSER=false`, and reservation/budget checks pass.
-    - Added source profiling for JS app shells, low visible text, script-heavy HTML, and cookie shells; AI results carry source warning codes.
-    - Expanded Markdown quality assessment for empty output, source-relative short output, frontmatter-dominant metadata output, boilerplate-only output, JavaScript-required messages across several languages, and conversion error markers.
-    - Browser fallback now bypasses weak non-browser cache entries only for eligible trusted requests, avoids caching weak AI output, keeps browser-enabled cache keys separate via `md:v3`, and emits `X-Converting-Warnings`.
-    - Browser Run request bodies now forward `waitForSelector` and `userAgent`; Browser Run JSON `{ result }` responses are unwrapped before returning/caching Markdown.
-    - Added tests: `test/browser-fallback.test.ts`, `test/quality.test.ts`, and `test/source-profile.test.ts`; updated cache/browser tests and docs.
-    - Verification passed: focused fallback/cache/browser tests, `npm run check` (22 test files, 90 tests), `npm run verify:release`, `npm run deploy:preflight`, and `npm run check:file-lines`.
-    - Committed and pushed guarded fallback implementation as `4360192` (`Add guarded browser fallback`) to `origin/main`.
-    - Reproduced the EDC encoded-character issue: live Markdown output had frontmatter entities such as `S&#xE6;lgere`, `p&#xE5;`, and `K&#xF8;benhavn` while article body text was already UTF-8 Danish.
-    - Added an `entities`-backed final Markdown normalization seam that decodes HTML character references, normalizes Unicode to NFC, normalizes decoded control whitespace, preserves inline/fenced code, and recomputes output bytes before cache/write/response handling.
-    - Added charset-aware text decoding for native Markdown/source profiling paths so declared source charsets such as ISO-8859-1 decode before Markdown inspection.
-    - Bumped Markdown cache keys from `md:v3` to `md:v4` and `outputFormatVersion` to `4` so stale encoded cache entries are bypassed.
-    - Added regression coverage for entity decoding, Unicode normalization, code preservation, native/AI/browser/cached normalization, and charset-aware text body decoding.
-    - Updated README, release readiness, and acceptance matrix docs with the normalization contract.
-    - Verification passed after normalization work: focused normalization/cache/source tests, `npm run verify:release` (24 test files, 94 tests, audit 0 vulnerabilities, deploy dry-run passed, health smoke passed), and `npm run deploy:preflight`.
-    - Committed and pushed the normalization implementation as `ab0f2c1` (`Normalize converted markdown text`) to `origin/main`.
+    - Loaded `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, `.dev-docs/converting-md-prd-split/00-index.md`, and focused PRD docs `04` and `11`.
+    - Confirmed README is currently 299 lines, so updates need consolidation rather than append-only changes.
+    - Confirmed `.git-local` status shows `CONTINUITY.md` modified and `.dev-docs/context/` untracked.
+    - Rewrote `README.md` to lead with the public address-bar route, then document private API mode, setup, admin keys, deploy, production checks, verification, troubleshooting, and open-source notes.
+    - Kept `README.md` under the 300-line budget at 293 lines.
+    - Verification passed: `npm run check:file-lines`, `npm run check:prd-docs`, `npm run verify:release` (24 test files, 94 tests), and `npm run deploy:preflight`.
+    - User asked to choose a standard OSS license, commit, and push.
+    - Added `LICENSE` with MIT text, set `package.json`/lockfile license metadata to `MIT`, and updated README open-source notes.
+    - Verification passed after license changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, and README stayed under 300 lines at 292 lines.
   - Now:
-    - Normalization implementation is complete, verified, committed, and pushed; only the continuity follow-up remains to publish.
+    - Staging and committing the open-source README/license changes.
   - Next:
-    - Deploy when ready so live EDC convenience output bypasses the old encoded cache.
+    - Push the commit to `origin/main`.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- UNCONFIRMED: Whether production secrets are visible in the Cloudflare Worker settings after the Dokploy/Wrangler deployment.
+- None.
 
 # Working set (files/ids/commands):
-- `.dev-docs/converting-md-prd-split/00-index.md`
-- `.dev-docs/context/WORKING.md`
-- `.dev-docs/converting-md-prd-split/*.md`
+- `README.md`
 - `CONTINUITY.md`
+- `.dev-docs/context/WORKING.md`
+- `.dev-docs/converting-md-prd-split/00-index.md`
+- `.dev-docs/converting-md-prd-split/04-cloudflare-config-deployment.md`
+- `.dev-docs/converting-md-prd-split/11-readme-ops-defaults.md`
+- `GIT_DIR=.git-local GIT_WORK_TREE=. git status --short`
+- `npm run verify:release`
+- `npm run deploy:preflight`
+- `LICENSE`
 - `package.json`
 - `package-lock.json`
-- `wrangler.jsonc`
-- `migrations/0001_init.sql`
-- `src/**`
-- `src/conversion/text-normalization.ts`
-- `src/utils/text-decoding.ts`
-- `scripts/**`
-- `scripts/check-deploy-config.ts`
-- `scripts/check-env-hygiene.ts`
-- `scripts/check-prd-docs.ts`
-- `scripts/smoke-health.ts`
-- `scripts/install-deploy-runner.mjs`
-- `src/middleware/query-string-auth.ts`
-- `test/**`
-- `test/deploy-preflight.test.ts`
-- `test/env-hygiene.test.ts`
-- `test/prd-docs.test.ts`
-- `test/local-key-script.test.ts`
-- `test/fakes/d1.ts`
-- `test/fakes/d1-rows.ts`
-- `test/fakes/d1-statement.ts`
-- `test/fakes/kv.ts`
-- `test/browser-budget.test.ts`
-- `test/image-quota.test.ts`
-- `test/orchestrator.test.ts`
-- `test/route-acceptance.test.ts`
-- `src/usage/events.ts`
-- `src/usage/conversions.ts`
-- `src/conversion/source-profile.ts`
-- `src/conversion/quality.ts`
-- `test/route-modes.test.ts`
-- `test/browser-fallback.test.ts`
-- `test/quality.test.ts`
-- `test/source-profile.test.ts`
-- `test/fetch-limits.test.ts`
-- `test/conversion-edge.test.ts`
-- `README.md`
-- `/tmp/geminixprize-source.html`
-- `/tmp/geminixprize-converted.md`
-- `/tmp/geminixprize-sections.js`
-- `RELEASE_READINESS.md`
-- `ACCEPTANCE_MATRIX.md`
-- `.github/workflows/check.yml`
-- `src/routes/admin.ts`
-- `src/usage/events.ts`
-- `src/usage/admin-report.ts`
-- `test/cache.test.ts`
-- Commands: `npm --cache /tmp/npm-cache ci --ignore-scripts`, `npm --cache /tmp/npm-cache ci --ignore-scripts --include=optional`, `npm run verify:release`, `npm run deploy:preflight`, `npm run smoke:health`, `npm run check`, `npm --cache /tmp/npm-cache audit`, `npm run deploy:dry-run`, `API_KEY_PEPPER=pepper npm run create-local-key`, Wrangler local `/healthz` smoke, `ssh kpi-v2-panel ...`
