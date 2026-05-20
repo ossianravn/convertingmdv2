@@ -38,7 +38,7 @@ describe("markdown cache", () => {
       markdownRequest({ ai: { cssSelector: "main" } })
     );
 
-    expect(plainKey.startsWith("md:v3:")).toBe(true);
+    expect(plainKey.startsWith("md:v4:")).toBe(true);
     expect(selectedKey).not.toBe(plainKey);
   });
 
@@ -76,7 +76,7 @@ describe("markdown cache", () => {
     expect(response.headers.get("X-Converting-Cache")).toBe("HIT");
     expect(response.headers.get("X-Converting-Method")).toBe("browser");
     expect(response.headers.get("X-Converting-Source-Content-Type")).toBe("text/html");
-    expect(response.headers.get("X-Converting-Output-Bytes")).toBe("17");
+    expect(response.headers.get("X-Converting-Output-Bytes")).toBe("16");
     expect(response.headers.get("X-Markdown-Tokens")).toBe("12");
     expect(response.headers.get("X-Browser-Ms-Used")).toBe("44");
     expect(await response.text()).toBe("# Cached Browser");

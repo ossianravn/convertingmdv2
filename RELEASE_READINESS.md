@@ -19,7 +19,7 @@ API_KEY_PEPPER=pepper npm run create-local-key
 Latest local results:
 
 - `npm --cache /tmp/npm-cache ci --ignore-scripts`: passed and left `package-lock.json` unchanged.
-- `npm run check`: passed with 22 test files and 90 tests.
+- `npm run check`: passed with 24 test files and 94 tests.
 - `npm run check:env-hygiene`: passed for `.dev.vars.example` placeholders and local env ignore rules.
 - `npm run check:prd-docs`: passed for split PRD manifest metadata and line budgets.
 - `npm --cache /tmp/npm-cache audit`: passed with 0 vulnerabilities.

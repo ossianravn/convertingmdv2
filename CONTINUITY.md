@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
-- Implement a guarded Browser Run fallback flow for conversion quality failures, including JS-rendered app shells, boilerplate-only AI output, cache semantics, language-agnostic output, and strict auth/quota guards.
-- Success means trusted authenticated requests can fall back to Browser Run when AI output is weak, anonymous traffic remains protected, edge cases are covered by tests, and release checks pass.
+- Implement API-level Markdown text normalization so clients receive decoded, Unicode-normalized text instead of HTML character references like `p&#xE5;`.
+- Success means native, AI, Browser Run, cached, Markdown, and JSON responses share the same normalization policy; multilingual text is preserved; tests cover entities and Unicode normalization; release checks pass.
 
 # Constraints/Assumptions:
 - Must read `.dev-docs/converting-md-prd-split/00-index.md` first, then all PRD files in the required order before scaffolding.
@@ -194,10 +194,17 @@
     - Added tests: `test/browser-fallback.test.ts`, `test/quality.test.ts`, and `test/source-profile.test.ts`; updated cache/browser tests and docs.
     - Verification passed: focused fallback/cache/browser tests, `npm run check` (22 test files, 90 tests), `npm run verify:release`, `npm run deploy:preflight`, and `npm run check:file-lines`.
     - Committed and pushed guarded fallback implementation as `4360192` (`Add guarded browser fallback`) to `origin/main`.
+    - Reproduced the EDC encoded-character issue: live Markdown output had frontmatter entities such as `S&#xE6;lgere`, `p&#xE5;`, and `K&#xF8;benhavn` while article body text was already UTF-8 Danish.
+    - Added an `entities`-backed final Markdown normalization seam that decodes HTML character references, normalizes Unicode to NFC, normalizes decoded control whitespace, preserves inline/fenced code, and recomputes output bytes before cache/write/response handling.
+    - Added charset-aware text decoding for native Markdown/source profiling paths so declared source charsets such as ISO-8859-1 decode before Markdown inspection.
+    - Bumped Markdown cache keys from `md:v3` to `md:v4` and `outputFormatVersion` to `4` so stale encoded cache entries are bypassed.
+    - Added regression coverage for entity decoding, Unicode normalization, code preservation, native/AI/browser/cached normalization, and charset-aware text body decoding.
+    - Updated README, release readiness, and acceptance matrix docs with the normalization contract.
+    - Verification passed after normalization work: focused normalization/cache/source tests, `npm run verify:release` (24 test files, 94 tests, audit 0 vulnerabilities, deploy dry-run passed, health smoke passed), and `npm run deploy:preflight`.
   - Now:
-    - Guarded fallback implementation is complete, verified locally, and pushed.
+    - Committing and pushing the verified normalization implementation to `origin/main`.
   - Next:
-    - Optional next step is to deploy the Worker, then create or update a trusted API key with Browser Run permission and test `mode=auto` POST requests with `browser.enabled=true` against JS-heavy pages such as `geminixprize.com`.
+    - Deploy when ready so live EDC convenience output bypasses the old encoded cache.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - UNCONFIRMED: Whether production secrets are visible in the Cloudflare Worker settings after the Dokploy/Wrangler deployment.
@@ -212,6 +219,8 @@
 - `wrangler.jsonc`
 - `migrations/0001_init.sql`
 - `src/**`
+- `src/conversion/text-normalization.ts`
+- `src/utils/text-decoding.ts`
 - `scripts/**`
 - `scripts/check-deploy-config.ts`
 - `scripts/check-env-hygiene.ts`

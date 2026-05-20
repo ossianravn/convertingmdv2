@@ -76,6 +76,7 @@ Covered criteria:
 - Browser Run requires explicit key permission, sends the expected Cloudflare REST body with wait, selector/user-agent, and asset-blocking options, records `X-Browser-Ms-Used`, unwraps JSON Markdown responses, charges reserved max when usage is missing, respects `DISABLE_BROWSER`, and releases reservations on failure.
 - Auto mode performs native-to-AI fallback and only uses Browser Run fallback when request, key, config, and quality signals allow it.
 - Weak AI output from JavaScript app shells, metadata-only pages, JavaScript-required pages, or boilerplate-only pages is detected without relying on English-only content.
+- Native, Workers AI, Browser Run, and cached Markdown outputs are decoded for HTML character references and normalized to NFC Unicode before response/cache accounting.
 
 ## Routes, Responses, and Events
 

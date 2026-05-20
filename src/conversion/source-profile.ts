@@ -1,4 +1,5 @@
 import { isHtmlContentType } from "../security/content-type";
+import { decodeTextBody } from "../utils/text-decoding";
 
 export type SourceWarning =
   | "source_js_app_shell"
@@ -9,7 +10,7 @@ export type SourceWarning =
 export function htmlSourceWarnings(body: ArrayBuffer, contentType: string | null): SourceWarning[] {
   if (!isHtmlContentType(contentType)) return [];
 
-  const html = decodeHtml(body);
+  const html = decodeTextBody(body, contentType);
   const bodyHtml = extractBody(html);
   const visibleText = htmlToVisibleText(bodyHtml);
   const visibleChars = countLettersAndNumbers(visibleText);
@@ -22,10 +23,6 @@ export function htmlSourceWarnings(body: ArrayBuffer, contentType: string | null
   if (hasCookieShell(bodyHtml) && visibleChars < 1400) warnings.add("source_cookie_shell");
 
   return [...warnings];
-}
-
-function decodeHtml(body: ArrayBuffer): string {
-  return new TextDecoder("utf-8").decode(body);
 }
 
 function extractBody(html: string): string {

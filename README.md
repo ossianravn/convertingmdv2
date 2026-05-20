@@ -13,7 +13,7 @@ This repository implements the v1 Worker foundation:
 - API-key hashing helpers that store hashes only
 - URL security, limited fetch, cache, conversion, and quota modules split by responsibility
 - native, Workers AI, and Browser Run strategies with guarded browser-ms reservations and image quota gates
-- Markdown result cache plus conversion events that store URL hashes and hostnames, not raw target URLs
+- Markdown text normalization, result cache, and conversion events that store URL hashes and hostnames, not raw target URLs
 
 Conversion routes authenticate first, charge request quota, check cache, then use the selected conversion mode. Browser Run and image conversion remain fail-closed behind global config and per-key capability checks.
 
@@ -115,6 +115,8 @@ browser  Browser Run /markdown strategy only
 ```
 
 In `mode=auto`, weak AI output from JavaScript app shells, metadata-only pages, or boilerplate-only pages can fall back to Browser Run only when `browser.enabled=true` and the API key has both `allowBrowser=true` and `autoBrowserFallback=true`. `GET` and convenience routes use default non-browser options. Browser-enabled cache keys are separate from default cache keys.
+
+All Markdown output is decoded for HTML character references, normalized to NFC Unicode, and byte-counted after normalization.
 
 Successful conversion responses include:
 

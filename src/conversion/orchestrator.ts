@@ -10,6 +10,7 @@ import { tryBrowserMarkdown } from "./browser";
 import { tryNativeMarkdown } from "./native";
 import { assessConversionQuality, meaningfulMarkdownChars } from "./quality";
 import type { ConversionResult } from "./result";
+import { normalizeConversionResult } from "./text-normalization";
 
 export interface ConversionContext {
   env: Env;
@@ -54,7 +55,9 @@ async function convertAuto(
 
   let aiError: unknown;
   try {
-    const aiResult = withQualityWarnings(await tryAiMarkdown(context.env, request, context.apiKey, context.config, context.requestId));
+    const aiResult = withQualityWarnings(
+      finalizeResult(await tryAiMarkdown(context.env, request, context.apiKey, context.config, context.requestId), context)
+    );
     const aiAssessment = assessConversionQuality(aiResult);
     if (aiAssessment.goodEnough) {
       await writeSuccessfulCache(cacheKey, request, context, aiResult);
@@ -85,7 +88,7 @@ async function convertWithCache(
   context: ConversionContext,
   convert: () => Promise<ConversionResult>
 ): Promise<ConversionResult> {
-  const result = await convert();
+  const result = finalizeResult(await convert(), context);
   await writeSuccessfulCache(cacheKey, request, context, result);
   return result;
 }
@@ -99,7 +102,9 @@ async function readCachedResult(
 
   try {
     const result = await readMarkdownCache(context.env, cacheKey);
-    return result ? { ...result, warnings: result.warnings ?? [], cached: true, requestId: context.requestId } : null;
+    return result
+      ? finalizeResult({ ...result, warnings: result.warnings ?? [], cached: true, requestId: context.requestId }, context)
+      : null;
   } catch (error) {
     throw cacheError(error, "Cache read failed.");
   }
@@ -148,7 +153,7 @@ async function tryBrowserFallback(
 ): Promise<ConversionResult | null> {
   try {
     const browser = withWarnings(
-      await tryBrowserMarkdown(context.env, request, context.apiKey, context.config, context.requestId),
+      finalizeResult(await tryBrowserMarkdown(context.env, request, context.apiKey, context.config, context.requestId), context),
       [trigger]
     );
     const assessment = assessConversionQuality(browser);
@@ -169,6 +174,10 @@ async function tryBrowserFallback(
 function withQualityWarnings(result: ConversionResult): ConversionResult {
   const assessment = assessConversionQuality(result);
   return withWarnings(result, assessment.reasons);
+}
+
+function finalizeResult(result: ConversionResult, context: ConversionContext): ConversionResult {
+  return normalizeConversionResult(result, context.config.maxOutputBytes);
 }
 
 function withWarnings(result: ConversionResult, warnings: string[]): ConversionResult {

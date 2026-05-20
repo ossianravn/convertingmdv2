@@ -4,6 +4,7 @@ import { ConvertingError } from "../http/errors";
 import type { ConversionResult } from "./result";
 import { isHtmlContentType, isMarkdownContentType } from "../security/content-type";
 import { byteLength } from "../utils/bytes";
+import { decodeTextBody } from "../utils/text-decoding";
 
 export async function tryNativeMarkdown(url: string, config: AppConfig, requestId: string): Promise<ConversionResult> {
   const result = await fetchWithLimits(url, {
@@ -15,7 +16,7 @@ export async function tryNativeMarkdown(url: string, config: AppConfig, requestI
   });
 
   const sourceContentType = result.response.headers.get("Content-Type");
-  const markdown = new TextDecoder().decode(result.body);
+  const markdown = decodeTextBody(result.body, sourceContentType);
   if (!canTreatAsNativeMarkdown(sourceContentType, markdown)) {
     throw new ConvertingError("conversion_failed", "Native Markdown was not available for this URL.", 502);
   }
