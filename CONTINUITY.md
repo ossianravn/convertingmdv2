@@ -193,8 +193,9 @@
     - Browser Run request bodies now forward `waitForSelector` and `userAgent`; Browser Run JSON `{ result }` responses are unwrapped before returning/caching Markdown.
     - Added tests: `test/browser-fallback.test.ts`, `test/quality.test.ts`, and `test/source-profile.test.ts`; updated cache/browser tests and docs.
     - Verification passed: focused fallback/cache/browser tests, `npm run check` (22 test files, 90 tests), `npm run verify:release`, `npm run deploy:preflight`, and `npm run check:file-lines`.
+    - Committed and pushed guarded fallback implementation as `4360192` (`Add guarded browser fallback`) to `origin/main`.
   - Now:
-    - Guarded fallback implementation is complete and verified locally.
+    - Guarded fallback implementation is complete, verified locally, and pushed.
   - Next:
     - Optional next step is to deploy the Worker, then create or update a trusted API key with Browser Run permission and test `mode=auto` POST requests with `browser.enabled=true` against JS-heavy pages such as `geminixprize.com`.
 
