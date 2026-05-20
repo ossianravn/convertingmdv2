@@ -27,10 +27,11 @@
     - User asked to choose a standard OSS license, commit, and push.
     - Added `LICENSE` with MIT text, set `package.json`/lockfile license metadata to `MIT`, and updated README open-source notes.
     - Verification passed after license changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, and README stayed under 300 lines at 292 lines.
+    - Committed and pushed `68edf60` (`Prepare README for open source release`) to `origin/main`.
   - Now:
-    - Staging and committing the open-source README/license changes.
+    - Updating the continuity ledger after push.
   - Next:
-    - Push the commit to `origin/main`.
+    - Report final state to the user.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None.
@@ -48,3 +49,4 @@
 - `LICENSE`
 - `package.json`
 - `package-lock.json`
+- Commit `68edf60`
