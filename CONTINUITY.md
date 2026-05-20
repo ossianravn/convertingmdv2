@@ -1,10 +1,10 @@
 # Goal (incl. success criteria):
-- Commit and push the README/open-source update, selecting a standard OSS license that fits the repository.
-- Success means the repo has a standard license file, package metadata and README agree on the license, release checks pass, and the resulting commit is pushed to `origin/main`.
+- Create a step-by-step guide for setting up ConvertingMD on Cloudflare, then commit and push it.
+- Success means the repo contains a Cloudflare setup guide grounded in current repo config and official Cloudflare behavior, README links to it, verification passes, and the changes are pushed to `origin/main`.
 
 # Constraints/Assumptions:
 - Read `.dev-docs/converting-md-prd-split/00-index.md` first; for this docs task, use focused PRD docs `04-cloudflare-config-deployment.md` and `11-readme-ops-defaults.md`.
-- Read `.dev-docs/context/WORKING.md` before editing; latest handoff says normalization was committed/pushed at `745cd9b`, production still needs deploy for normalized `md:v4` output.
+- Use official Cloudflare docs for current Wrangler/D1/KV/secrets/domain behavior where relevant.
 - Current production Wrangler config is temporary browser address-bar mode: `REQUIRE_AUTH=false`, `ALLOW_ANON=true`; Browser Run and image conversion remain protected.
 - Keep files under 300 lines without line-squeezing; split or rewrite by responsibility where needed.
 - Do not edit `AGENTS.md`, reset the database, use `git checkout`, or revert user changes without explicit confirmation.
@@ -12,9 +12,7 @@
 - Use `.git-local` for commit/push operations; `.dev-docs/context/` is untracked handoff material and should not be swept into the commit unless explicitly requested.
 
 # Key decisions:
-- Treat the README opening as end-user facing: lead with `https://converting.md/https://example.com/page`, then explain that the repo can also run private API-key mode.
-- Keep open-source messaging factual and operational; do not leak agent/developer handoff context into the README.
-- Use the MIT License: it is a standard permissive OSS license with SPDX identifier `MIT`, fits a reusable Cloudflare Worker app, and avoids adding copyleft obligations.
+- Add the detailed Cloudflare setup as a separate root-level guide rather than expanding the already concise README.
 
 # State:
   - Done:
@@ -28,10 +26,14 @@
     - Added `LICENSE` with MIT text, set `package.json`/lockfile license metadata to `MIT`, and updated README open-source notes.
     - Verification passed after license changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, and README stayed under 300 lines at 292 lines.
     - Committed and pushed `68edf60` (`Prepare README for open source release`) to `origin/main`.
+    - Read current README, `RELEASE_READINESS.md`, `wrangler.jsonc`, PRD deployment docs, and checked official Cloudflare docs for Wrangler deploy, D1, KV, Workers AI bindings, secrets, and custom domains.
+    - Added `CLOUDFLARE_SETUP.md` with a 12-step setup flow covering local preparation, auth mode, D1, KV, Workers AI binding, secrets, verification, remote migration, deploy, custom domain, production smoke tests, and operations.
+    - Linked `CLOUDFLARE_SETUP.md` from the README Cloudflare Setup section.
+    - Verification passed after guide changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run check:prd-docs`.
   - Now:
-    - Updating the continuity ledger after push.
+    - Staging and committing the setup guide changes.
   - Next:
-    - Report final state to the user.
+    - Push to `origin/main` and report final state.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None.
@@ -50,3 +52,4 @@
 - `package.json`
 - `package-lock.json`
 - Commit `68edf60`
+- `CLOUDFLARE_SETUP.md`

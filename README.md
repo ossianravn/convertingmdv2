@@ -204,6 +204,9 @@ curl \
 
 ## Cloudflare Setup
 
+For a step-by-step production setup walkthrough, see
+[CLOUDFLARE_SETUP.md](./CLOUDFLARE_SETUP.md).
+
 Create D1 and KV:
 
 ```bash
