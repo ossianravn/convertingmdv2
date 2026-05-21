@@ -14,6 +14,7 @@
 - Add the detailed Cloudflare setup as a separate root-level guide rather than expanding the already concise README.
 - Keep redirect validation in `fetchWithLimits`; decorate successful route results with source URL frontmatter at the route boundary so cache hits and all methods share one external response contract.
 - Only infer `text/html` for bad/missing source content types when the body starts with an unmistakable HTML document signature; do not broadly accept generic binary/JSON responses.
+- For Cloudflare runtime manual redirect edge cases that produce empty, headerless responses, retry the same safe GET with runtime redirect following, then validate the final `response.url` before reading/converting; only safe `Accept` and `User-Agent` headers are sent.
 
 # State:
   - Done:
@@ -33,6 +34,10 @@
     - Updated EDC redirect route regression to model a generic `application/octet-stream` final response with an HTML body.
     - Added AI conversion tests for generic content type with clear HTML and non-HTML bodies.
     - Verification passed: focused tests, `npm run typecheck`, `npm run check:file-lines`, and `npm run verify:release` (25 files, 97 tests).
+    - Committed and pushed `c6e4fba` (`Infer HTML for generic source content types`) to `origin/main`.
+    - Deployed `c6e4fba` to Cloudflare as Worker version `f4835c08-00fc-47a1-9a7b-8b627f9f8838`; exact `/roenne` URL still failed, while the final redirected URL converted successfully.
+    - Added a constrained runtime redirect fallback in `src/http/fetch-with-limits.ts` for empty, headerless manual responses, plus tests that validate final URLs and reject blocked final URLs.
+    - Verification passed: focused fetch/redirect tests, `npm run typecheck`, `npm run check:file-lines`, and `npm run verify:release` (25 files, 99 tests).
     - Current turn: read `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, and `.dev-docs/converting-md-prd-split/00-index.md`.
     - Handoff says README OSS readiness, MIT license, and `CLOUDFLARE_SETUP.md` work are complete, verified, committed, and pushed to `origin/main`.
     - Loaded `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, `.dev-docs/converting-md-prd-split/00-index.md`, and focused PRD docs `04` and `11`.
@@ -51,7 +56,7 @@
     - Verification passed after guide changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run check:prd-docs`.
     - Committed and pushed `0d08fb6` (`Add Cloudflare setup guide`) to `origin/main`.
   - Now:
-    - Committing/pushing/deploying the guarded content-type inference fix.
+    - Committing/pushing/deploying the runtime redirect fallback fix.
   - Next:
     - Deploy the Worker and live-smoke `https://converting.md/https://www.edc.dk/roenne`.
 
@@ -86,3 +91,4 @@
 - `src/security/content-type.ts`
 - `src/conversion/ai.ts`
 - `test/conversion-edge.test.ts`
+- `test/fetch-limits.test.ts`

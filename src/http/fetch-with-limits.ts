@@ -1,6 +1,8 @@
 import { ConvertingError } from "./errors";
 import { assertRedirectAllowed, validateAndNormalizeUrl } from "../security/url";
 
+type RedirectMode = "manual" | "follow";
+
 export interface FetchWithLimitsOptions {
   accept: string;
   maxBytes: number;
@@ -30,6 +32,10 @@ export async function fetchWithLimits(url: string, options: FetchWithLimitsOptio
     }
 
     const body = await readBodyWithLimit(response, options.maxBytes);
+    if (shouldRetryWithRuntimeRedirects(response, body)) {
+      return fetchFollowedWithLimits(currentUrl, options);
+    }
+
     return {
       url: currentUrl,
       response,
@@ -41,14 +47,26 @@ export async function fetchWithLimits(url: string, options: FetchWithLimitsOptio
   throw new ConvertingError("blocked_url", "Too many redirects.", 400);
 }
 
-async function fetchOnce(url: string, options: FetchWithLimitsOptions): Promise<Response> {
+async function fetchFollowedWithLimits(url: string, options: FetchWithLimitsOptions): Promise<LimitedFetchResult> {
+  const response = await fetchOnce(url, options, "follow");
+  const finalUrl = validateAndNormalizeUrl(response.url || url);
+  const body = await readBodyWithLimit(response, options.maxBytes);
+  return {
+    url: finalUrl,
+    response,
+    body,
+    bytesRead: body.byteLength
+  };
+}
+
+async function fetchOnce(url: string, options: FetchWithLimitsOptions, redirect: RedirectMode = "manual"): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs);
 
   try {
     return await fetch(url, {
       method: "GET",
-      redirect: "manual",
+      redirect,
       signal: controller.signal,
       headers: {
         Accept: options.accept,
@@ -73,3 +91,6 @@ function isRedirect(status: number): boolean {
   return status >= 300 && status < 400;
 }
 
+function shouldRetryWithRuntimeRedirects(response: Response, body: ArrayBuffer): boolean {
+  return body.byteLength === 0 && !response.headers.get("Content-Type");
+}

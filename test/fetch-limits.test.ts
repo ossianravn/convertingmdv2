@@ -53,6 +53,36 @@ describe("fetchWithLimits", () => {
       status: 413
     });
   });
+
+  it("uses runtime redirect following when manual redirects return an empty headerless response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null))
+        .mockResolvedValueOnce(responseWithUrl("# Final", "https://example.com/final"))
+    );
+
+    const result = await fetchWithLimits("https://example.com/start", fetchOptions());
+
+    expect(result.url).toBe("https://example.com/final");
+    expect(new TextDecoder().decode(result.body)).toBe("# Final");
+  });
+
+  it("rejects runtime-followed redirects to blocked final URLs", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response(null))
+        .mockResolvedValueOnce(responseWithUrl("private", "http://127.0.0.1/private"))
+    );
+
+    await expect(fetchWithLimits("https://example.com/start", fetchOptions())).rejects.toMatchObject({
+      code: "blocked_url",
+      status: 400
+    });
+  });
 });
 
 function fetchOptions(overrides = {}) {
@@ -66,3 +96,8 @@ function fetchOptions(overrides = {}) {
   };
 }
 
+function responseWithUrl(body: string, url: string): Response {
+  const response = new Response(body, { headers: { "Content-Type": "text/markdown" } });
+  Object.defineProperty(response, "url", { value: url });
+  return response;
+}
