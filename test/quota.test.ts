@@ -20,7 +20,7 @@ describe("request quotas", () => {
     const response = await app.fetch(markdownRequest(rawKey), env);
 
     expect(response.status).toBe(200);
-    await expect(response.text()).resolves.toBe("# Native");
+    await expect(response.text()).resolves.toBe("---\nurl: https://example.com/\n---\n\n# Native");
 
     const periods = getPeriodKeys(new Date());
     expect(findCounter(d1.counters, "key", "day", periods.day)?.requests).toBe(1);

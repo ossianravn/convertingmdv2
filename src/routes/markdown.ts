@@ -1,5 +1,6 @@
 import type { Context, Hono } from "hono";
 import { parseConfig } from "../config";
+import { withSourceUrlFrontmatter } from "../conversion/frontmatter";
 import { convertMarkdown } from "../conversion/orchestrator";
 import { conversionResponse } from "../http/responses";
 import { requireApiKey } from "../middleware/auth";
@@ -37,13 +38,14 @@ export async function handleMarkdownRequest(
   try {
     const rateLimit = await enforceRequestQuota(c.env, apiKey, now);
 
-    const result = await convertMarkdown(request, {
+    const rawResult = await convertMarkdown(request, {
       env: c.env,
       apiKey,
       config,
       requestId,
       now
     });
+    const result = withSourceUrlFrontmatter(rawResult, config.maxOutputBytes);
 
     await incrementConversionCounters(c.env, apiKey.id, result, now);
     await logConversionEvent(c.env, successEventInput(apiKey.id, requestId, request.url, result, now));

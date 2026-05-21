@@ -18,16 +18,16 @@ describe("markdown route acceptance", () => {
 
     const response = await app.fetch(markdownGet(setup.rawKey), setup.env);
 
-    expect(response.status).toBe(200);
+    expect(response.status, await response.clone().text()).toBe(200);
     expect(response.headers.get("Content-Type")).toContain("text/markdown");
     expect(response.headers.get("X-Converting-Request-Id")).toMatch(/^req_/);
     expect(response.headers.get("X-Converting-Method")).toBe("native");
     expect(response.headers.get("X-Converting-Cache")).toBe("MISS");
     expect(response.headers.get("X-Converting-Source-Content-Type")).toBe("text/markdown");
-    expect(response.headers.get("X-Converting-Output-Bytes")).toBe("8");
+    expect(response.headers.get("X-Converting-Output-Bytes")).toBe(outputBytes(expectedMarkdown("https://example.com/page", "# Native")));
     expect(response.headers.get("X-RateLimit-Remaining-Day")).toBe("999");
     expect(response.headers.get("X-RateLimit-Remaining-Month")).toBe("24999");
-    expect(await response.text()).toBe("# Native");
+    expect(await response.text()).toBe(expectedMarkdown("https://example.com/page", "# Native"));
     expect(setup.d1.conversionEvents).toHaveLength(1);
     expect(setup.d1.conversionEvents[0]).toMatchObject({
       api_key_id: "key_route",
@@ -47,10 +47,10 @@ describe("markdown route acceptance", () => {
 
     const response = await app.fetch(markdownPost(setup.rawKey, { format: "json" }), setup.env);
 
-    expect(response.status).toBe(200);
+    expect(response.status, await response.clone().text()).toBe(200);
     expect(response.headers.get("Content-Type")).toContain("application/json");
     await expect(response.json()).resolves.toMatchObject({
-      markdown: "# Json",
+      markdown: expectedMarkdown("https://example.com/page", "# Json"),
       method: "native",
       cached: false,
       requestId: expect.stringMatching(/^req_/)
@@ -70,7 +70,7 @@ describe("markdown route acceptance", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("X-Converting-Method")).toBe("native");
-    expect(await response.text()).toBe("# Header");
+    expect(await response.text()).toBe(expectedMarkdown("https://example.com/page", "# Header"));
   });
 
   it("serves cache hits without fetching and logs HIT metadata", async () => {
@@ -100,7 +100,7 @@ describe("markdown route acceptance", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("X-Converting-Cache")).toBe("HIT");
     expect(response.headers.get("X-Browser-Ms-Used")).toBe("999");
-    expect(await response.text()).toBe("# Cached");
+    expect(await response.text()).toBe(expectedMarkdown("https://example.com/page", "# Cached"));
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(setup.d1.conversionEvents[0]).toMatchObject({
       method: "ai",
@@ -122,7 +122,7 @@ describe("markdown route acceptance", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(await response.text()).toBe("# Convenience");
+    expect(await response.text()).toBe(expectedMarkdown("https://example.com/page?x=1", "# Convenience"));
     expect(setup.d1.conversionEvents[0]).toMatchObject({
       host: "example.com",
       status: "success"
@@ -137,7 +137,7 @@ describe("markdown route acceptance", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("X-RateLimit-Remaining-Day")).toBe("99999");
-    expect(await response.text()).toBe("# Anonymous");
+    expect(await response.text()).toBe(expectedMarkdown("https://example.com/page", "# Anonymous"));
     expect(setup.d1.conversionEvents[0]).toMatchObject({
       api_key_id: "anon_public",
       host: "example.com",
@@ -257,4 +257,12 @@ function defaultMarkdownRequest(url: string): MarkdownRequest {
     ai: { allowImages: false, cssSelector: null, imageDescriptionLanguage: "en" },
     browser: { enabled: false, waitUntil: "domcontentloaded", waitForSelector: null, userAgent: null, blockAssets: true }
   };
+}
+
+function expectedMarkdown(url: string, body: string): string {
+  return `---\nurl: ${url}\n---\n\n${body}`;
+}
+
+function outputBytes(value: string): string {
+  return String(new TextEncoder().encode(value).byteLength);
 }

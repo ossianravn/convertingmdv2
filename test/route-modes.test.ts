@@ -20,7 +20,9 @@ describe("conversion mode routes", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("X-Converting-Method")).toBe("native");
     expect(periodCounter(setup.d1.counters, "key", "day")?.native_requests).toBe(1);
-    expect(periodCounter(setup.d1.counters, "global", "month")?.bytes_out).toBe("# Native".length);
+    expect(periodCounter(setup.d1.counters, "global", "month")?.bytes_out).toBe(
+      new TextEncoder().encode("---\nurl: https://example.com/page\n---\n\n# Native").byteLength
+    );
   });
 
   it("counts AI conversions and exposes token headers", async () => {

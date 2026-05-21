@@ -76,10 +76,10 @@ describe("markdown cache", () => {
     expect(response.headers.get("X-Converting-Cache")).toBe("HIT");
     expect(response.headers.get("X-Converting-Method")).toBe("browser");
     expect(response.headers.get("X-Converting-Source-Content-Type")).toBe("text/html");
-    expect(response.headers.get("X-Converting-Output-Bytes")).toBe("16");
+    expect(response.headers.get("X-Converting-Output-Bytes")).toBe(outputBytes(expectedMarkdown("# Cached Browser")));
     expect(response.headers.get("X-Markdown-Tokens")).toBe("12");
     expect(response.headers.get("X-Browser-Ms-Used")).toBe("44");
-    expect(await response.text()).toBe("# Cached Browser");
+    expect(await response.text()).toBe(expectedMarkdown("# Cached Browser"));
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
@@ -170,4 +170,12 @@ function cachedBrowserResult(): ConversionResult {
     warnings: [],
     requestId: "req_old"
   };
+}
+
+function expectedMarkdown(body: string): string {
+  return `---\nurl: https://example.com/page\n---\n\n${body}`;
+}
+
+function outputBytes(value: string): string {
+  return String(new TextEncoder().encode(value).byteLength);
 }
