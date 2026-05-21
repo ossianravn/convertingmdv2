@@ -8,6 +8,7 @@ import type { AiMarkdownDocument, AiToMarkdownOptions, Env } from "../types/env"
 import { byteLength } from "../utils/bytes";
 import type { ConversionResult } from "./result";
 import { htmlSourceWarnings } from "./source-profile";
+import { SOURCE_USER_AGENT } from "../http/source-user-agent";
 
 export async function tryAiMarkdown(
   env: Env,
@@ -22,7 +23,7 @@ export async function tryAiMarkdown(
     maxRedirects: 5,
     redirectMode: "follow",
     timeoutMs: 10000,
-    userAgent: "converting.md/0.1"
+    userAgent: SOURCE_USER_AGENT
   });
   const sourceContentType = inferHtmlContentType(fetched.response.headers.get("Content-Type"), fetched.body);
   const imageRequest = isImageRequest(fetched.url, sourceContentType);
@@ -32,7 +33,7 @@ export async function tryAiMarkdown(
     await enforceImageQuota(env, apiKey, config, new Date());
   }
   if (!isSupportedDocumentContentType(sourceContentType) && !isImageContentType(sourceContentType)) {
-    throw new ConvertingError("conversion_failed", "Source content type is not supported.", 502);
+    throw new ConvertingError("conversion_failed", unsupportedSourceMessage(fetched, sourceContentType), 502);
   }
 
   const document = createMarkdownDocument(fetched.url, fetched.body, sourceContentType);
@@ -60,6 +61,16 @@ export async function tryAiMarkdown(
 
 function isImageRequest(url: string, contentType: string | null): boolean {
   return isImageContentType(contentType) || isLikelyImageUrl(url);
+}
+
+function unsupportedSourceMessage(fetched: { url: string; response: Response; body: ArrayBuffer; bytesRead: number }, contentType: string | null): string {
+  return [
+    "Source content type is not supported.",
+    `status=${fetched.response.status}`,
+    `contentType=${contentType ?? "missing"}`,
+    `bytes=${fetched.bytesRead}`,
+    `url=${fetched.url}`
+  ].join(" ");
 }
 
 function createMarkdownDocument(url: string, body: ArrayBuffer, contentType: string | null): AiMarkdownDocument {

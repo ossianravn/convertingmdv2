@@ -16,6 +16,7 @@
 - Only infer `text/html` for bad/missing source content types when the body starts with an unmistakable HTML document signature; do not broadly accept generic binary/JSON responses.
 - For Cloudflare runtime manual redirect edge cases that produce empty, headerless responses, retry the same safe GET with runtime redirect following, then validate the final `response.url` before reading/converting; only safe `Accept` and `User-Agent` headers are sent.
 - AI source fetches use runtime redirect following directly, then validate the final `response.url`; native fetches retain the strict manual redirect path.
+- Source fetches use a browser-compatible user agent because EDC/CHEQ blocks the bare service user agent on intermediate redirect URLs.
 
 # State:
   - Done:
@@ -41,6 +42,10 @@
     - Verification passed: focused fetch/redirect tests, `npm run typecheck`, `npm run check:file-lines`, and `npm run verify:release` (25 files, 99 tests).
     - Committed and pushed `13d4f68` (`Handle runtime-hidden redirect responses`) and deployed it as Worker version `b4a1b335-3470-477c-9184-6949729b27dd`; exact `/roenne` URL still failed.
     - Switched AI source fetches to explicit runtime redirect following with final URL validation; focused tests pass and `npm run verify:release` passed with 25 files and 100 tests.
+    - Diagnosed production short URL failure as EDC CHEQ blocking the intermediate `/roenne/` URL for the bare service user agent: `status=403`, `Blocked by CHEQ`.
+    - Added `src/http/source-user-agent.ts` and switched native/AI source fetches to a browser-compatible user agent.
+    - Deployed the user-agent build as Worker version `d6d55451-9575-4bae-a524-c089f7b7dc12`; live smoke for `https://converting.md/https://www.edc.dk/roenne` returned 200 with canonical source URL and `url:` frontmatter.
+    - Verification passed after final change: `npm run verify:release` (25 files, 100 tests).
     - Current turn: read `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, and `.dev-docs/converting-md-prd-split/00-index.md`.
     - Handoff says README OSS readiness, MIT license, and `CLOUDFLARE_SETUP.md` work are complete, verified, committed, and pushed to `origin/main`.
     - Loaded `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, `.dev-docs/converting-md-prd-split/00-index.md`, and focused PRD docs `04` and `11`.
@@ -59,9 +64,9 @@
     - Verification passed after guide changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run check:prd-docs`.
     - Committed and pushed `0d08fb6` (`Add Cloudflare setup guide`) to `origin/main`.
   - Now:
-    - Committing/pushing/deploying the runtime redirect fallback fix.
+    - Committing and pushing the already-deployed user-agent/source-fetch fix.
   - Next:
-    - Deploy the Worker and live-smoke `https://converting.md/https://www.edc.dk/roenne`.
+    - Report commit/deploy/live-smoke result.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None.
@@ -95,3 +100,5 @@
 - `src/conversion/ai.ts`
 - `test/conversion-edge.test.ts`
 - `test/fetch-limits.test.ts`
+- `src/conversion/native.ts`
+- `src/http/source-user-agent.ts`

@@ -3,6 +3,7 @@ import { fetchWithLimits } from "../http/fetch-with-limits";
 import { ConvertingError } from "../http/errors";
 import type { ConversionResult } from "./result";
 import { isHtmlContentType, isMarkdownContentType } from "../security/content-type";
+import { SOURCE_USER_AGENT } from "../http/source-user-agent";
 import { byteLength } from "../utils/bytes";
 import { decodeTextBody } from "../utils/text-decoding";
 
@@ -12,7 +13,7 @@ export async function tryNativeMarkdown(url: string, config: AppConfig, requestI
     maxBytes: config.maxSourceBytes,
     maxRedirects: 5,
     timeoutMs: 10000,
-    userAgent: "converting.md/0.1"
+    userAgent: SOURCE_USER_AGENT
   });
 
   const sourceContentType = result.response.headers.get("Content-Type");
