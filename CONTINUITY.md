@@ -15,6 +15,7 @@
 - Keep redirect validation in `fetchWithLimits`; decorate successful route results with source URL frontmatter at the route boundary so cache hits and all methods share one external response contract.
 - Only infer `text/html` for bad/missing source content types when the body starts with an unmistakable HTML document signature; do not broadly accept generic binary/JSON responses.
 - For Cloudflare runtime manual redirect edge cases that produce empty, headerless responses, retry the same safe GET with runtime redirect following, then validate the final `response.url` before reading/converting; only safe `Accept` and `User-Agent` headers are sent.
+- AI source fetches use runtime redirect following directly, then validate the final `response.url`; native fetches retain the strict manual redirect path.
 
 # State:
   - Done:
@@ -38,6 +39,8 @@
     - Deployed `c6e4fba` to Cloudflare as Worker version `f4835c08-00fc-47a1-9a7b-8b627f9f8838`; exact `/roenne` URL still failed, while the final redirected URL converted successfully.
     - Added a constrained runtime redirect fallback in `src/http/fetch-with-limits.ts` for empty, headerless manual responses, plus tests that validate final URLs and reject blocked final URLs.
     - Verification passed: focused fetch/redirect tests, `npm run typecheck`, `npm run check:file-lines`, and `npm run verify:release` (25 files, 99 tests).
+    - Committed and pushed `13d4f68` (`Handle runtime-hidden redirect responses`) and deployed it as Worker version `b4a1b335-3470-477c-9184-6949729b27dd`; exact `/roenne` URL still failed.
+    - Switched AI source fetches to explicit runtime redirect following with final URL validation; focused tests pass and `npm run verify:release` passed with 25 files and 100 tests.
     - Current turn: read `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, and `.dev-docs/converting-md-prd-split/00-index.md`.
     - Handoff says README OSS readiness, MIT license, and `CLOUDFLARE_SETUP.md` work are complete, verified, committed, and pushed to `origin/main`.
     - Loaded `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, `.dev-docs/converting-md-prd-split/00-index.md`, and focused PRD docs `04` and `11`.

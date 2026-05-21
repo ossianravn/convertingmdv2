@@ -20,6 +20,7 @@ export async function tryAiMarkdown(
     accept: "text/html,application/pdf,text/plain,*/*",
     maxBytes: config.maxSourceBytes,
     maxRedirects: 5,
+    redirectMode: "follow",
     timeoutMs: 10000,
     userAgent: "converting.md/0.1"
   });

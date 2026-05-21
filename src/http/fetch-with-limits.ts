@@ -7,6 +7,7 @@ export interface FetchWithLimitsOptions {
   accept: string;
   maxBytes: number;
   maxRedirects: number;
+  redirectMode?: RedirectMode;
   timeoutMs: number;
   userAgent: string;
 }
@@ -20,6 +21,9 @@ export interface LimitedFetchResult {
 
 export async function fetchWithLimits(url: string, options: FetchWithLimitsOptions): Promise<LimitedFetchResult> {
   let currentUrl = validateAndNormalizeUrl(url);
+  if (options.redirectMode === "follow") {
+    return fetchFollowedWithLimits(currentUrl, options);
+  }
 
   for (let redirects = 0; redirects <= options.maxRedirects; redirects += 1) {
     const response = await fetchOnce(currentUrl, options);

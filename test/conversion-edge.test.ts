@@ -84,6 +84,7 @@ describe("conversion edge cases", () => {
     expect(aiSpy).toHaveBeenCalledWith(expect.any(Object), {
       conversionOptions: { html: { hostname: "example.com", cssSelector: "main" } }
     });
+    expect((fetch as unknown as { mock: { calls: unknown[][] } }).mock.calls[0]?.[1]).toMatchObject({ redirect: "follow" });
   });
 
   it("AI treats unmistakable HTML bodies as HTML when the origin sends a generic content type", async () => {

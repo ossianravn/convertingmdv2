@@ -53,7 +53,11 @@ async function authedSetup() {
 }
 
 function edcRedirectFetch() {
-  return vi.fn(async (input: RequestInfo | URL) => {
+  return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (init?.redirect === "follow") {
+      return responseWithUrl("<!doctype html><html><head><title>EDC</title></head><body>EDC</body></html>", finalEdcUrl);
+    }
+
     const url = String(input);
     if (url.endsWith("/roenne")) return redirectResponse("/roenne/");
     if (url.endsWith("/roenne/")) return redirectResponse("/ejendomsmaegler/roenne/bornholmerbo");
@@ -66,6 +70,12 @@ function edcRedirectFetch() {
 
 function redirectResponse(location: string): Response {
   return new Response(null, { status: 301, headers: { Location: location } });
+}
+
+function responseWithUrl(body: string, url: string): Response {
+  const response = new Response(body, { headers: { "Content-Type": "application/octet-stream" } });
+  Object.defineProperty(response, "url", { value: url });
+  return response;
 }
 
 function edcFrontmatter(): string {

@@ -69,6 +69,18 @@ describe("fetchWithLimits", () => {
     expect(new TextDecoder().decode(result.body)).toBe("# Final");
   });
 
+  it("supports explicit runtime redirect following with final URL validation", async () => {
+    const fetchSpy = vi.fn(async () => responseWithUrl("# Final", "https://example.com/final"));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const result = await fetchWithLimits("https://example.com/start", fetchOptions({ redirectMode: "follow" }));
+
+    expect(result.url).toBe("https://example.com/final");
+    const calls = fetchSpy.mock.calls as unknown as Array<[unknown, RequestInit]>;
+    const init = calls[0]?.[1];
+    expect(init).toMatchObject({ redirect: "follow" });
+  });
+
   it("rejects runtime-followed redirects to blocked final URLs", async () => {
     vi.stubGlobal(
       "fetch",
