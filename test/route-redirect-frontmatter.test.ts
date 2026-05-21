@@ -58,7 +58,9 @@ function edcRedirectFetch() {
     if (url.endsWith("/roenne")) return redirectResponse("/roenne/");
     if (url.endsWith("/roenne/")) return redirectResponse("/ejendomsmaegler/roenne/bornholmerbo");
     if (url.endsWith("/bornholmerbo")) return redirectResponse("/ejendomsmaegler/roenne/bornholmerbo/");
-    return new Response("<html>EDC</html>", { headers: { "Content-Type": "text/html; charset=utf-8" } });
+    return new Response("<!doctype html><html><head><title>EDC</title></head><body>EDC</body></html>", {
+      headers: { "Content-Type": "application/octet-stream" }
+    });
   });
 }
 

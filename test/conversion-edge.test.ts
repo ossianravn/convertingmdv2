@@ -86,6 +86,43 @@ describe("conversion edge cases", () => {
     });
   });
 
+  it("AI treats unmistakable HTML bodies as HTML when the origin sends a generic content type", async () => {
+    const aiSpy = vi.fn<ToMarkdown>(async () => ({ markdown: "# AI", tokens: 5 }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response("<!doctype html><html><body>Hello</body></html>", {
+            headers: { "Content-Type": "application/octet-stream" }
+          })
+      )
+    );
+
+    const result = await tryAiMarkdown(
+      makeEnv({ AI: { toMarkdown: aiSpy } }),
+      markdownRequest({}),
+      apiKey({}),
+      parseConfig(makeEnv()),
+      "req_test"
+    );
+
+    expect(result.sourceContentType).toBe("text/html");
+    expect((aiSpy.mock.calls[0]?.[0] as { blob: Blob }).blob.type).toBe("text/html");
+  });
+
+  it("AI rejects generic content types when the body is not clearly HTML", async () => {
+    const aiSpy = vi.fn<ToMarkdown>();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("not html", { headers: { "Content-Type": "application/octet-stream" } }))
+    );
+
+    await expect(
+      tryAiMarkdown(makeEnv({ AI: { toMarkdown: aiSpy } }), markdownRequest({}), apiKey({}), parseConfig(makeEnv()), "req_test")
+    ).rejects.toMatchObject({ code: "conversion_failed", status: 502 });
+    expect(aiSpy).not.toHaveBeenCalled();
+  });
+
   it("AI rejects unsupported content types before calling Workers AI", async () => {
     const aiSpy = vi.fn<ToMarkdown>();
     vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { headers: { "Content-Type": "application/json" } })));

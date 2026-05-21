@@ -1,7 +1,7 @@
 import type { AppConfig } from "../config";
 import { ConvertingError } from "../http/errors";
 import { fetchWithLimits } from "../http/fetch-with-limits";
-import { isImageContentType, isLikelyImageUrl, isSupportedDocumentContentType } from "../security/content-type";
+import { inferHtmlContentType, isImageContentType, isLikelyImageUrl, isSupportedDocumentContentType } from "../security/content-type";
 import { enforceImageQuota } from "../usage/quota";
 import type { ApiKey, MarkdownRequest } from "../types/api";
 import type { AiMarkdownDocument, AiToMarkdownOptions, Env } from "../types/env";
@@ -23,7 +23,7 @@ export async function tryAiMarkdown(
     timeoutMs: 10000,
     userAgent: "converting.md/0.1"
   });
-  const sourceContentType = fetched.response.headers.get("Content-Type");
+  const sourceContentType = inferHtmlContentType(fetched.response.headers.get("Content-Type"), fetched.body);
   const imageRequest = isImageRequest(fetched.url, sourceContentType);
   const warnings = htmlSourceWarnings(fetched.body, sourceContentType);
 

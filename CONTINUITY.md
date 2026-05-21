@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
-- Fix conversion for source URLs that redirect, including `https://www.edc.dk/roenne`, and add `url: {url}` as the first frontmatter field in all successful markdown returns.
-- Success means redirects are followed with PRD-required validation, redirect and non-redirect markdown outputs include the resolved source URL first in frontmatter, regression tests cover the behavior, verification passes, and unrelated handoff files remain uncommitted unless explicitly requested.
+- Fix live conversion for `https://converting.md/https://www.edc.dk/roenne` and keep `url: {url}` as the first frontmatter field in all successful markdown returns.
+- Success means the live EDC URL converts successfully, redirects are followed with PRD-required validation, guarded HTML content-type inference handles EDC's production response, regression tests cover the behavior, verification passes, and changes are committed/pushed/deployed.
 
 # Constraints/Assumptions:
 - Read `.dev-docs/converting-md-prd-split/00-index.md` first; for this bug fix, use focused PRD docs `06a-url-security.md`, `08-routes-responses-errors.md`, and tests docs if needed.
@@ -13,6 +13,7 @@
 # Key decisions:
 - Add the detailed Cloudflare setup as a separate root-level guide rather than expanding the already concise README.
 - Keep redirect validation in `fetchWithLimits`; decorate successful route results with source URL frontmatter at the route boundary so cache hits and all methods share one external response contract.
+- Only infer `text/html` for bad/missing source content types when the body starts with an unmistakable HTML document signature; do not broadly accept generic binary/JSON responses.
 
 # State:
   - Done:
@@ -24,6 +25,14 @@
     - Added `test/route-redirect-frontmatter.test.ts` for the EDC-style redirect chain and final URL frontmatter.
     - Updated route/cache/quota/mode tests for decorated markdown and output byte accounting.
     - Verification passed: `npm run typecheck`, `npm test` (25 files, 95 tests), `npm run check:file-lines`, and `npm run verify:release`.
+    - Committed and pushed `2270cca` (`Add source URL frontmatter to markdown responses`) to `origin/main`.
+    - User tested live EDC URL again and still saw `conversion_failed` / `Source content type is not supported`.
+    - Confirmed production has the frontmatter commit live via `https://converting.md/https://example.com`, so the remaining issue is not deploy lag.
+    - Confirmed EDC returns valid HTML after redirects from curl, but production Worker still reaches unsupported content-type handling.
+    - Added guarded HTML body signature inference in `src/security/content-type.ts` and used it in `src/conversion/ai.ts`.
+    - Updated EDC redirect route regression to model a generic `application/octet-stream` final response with an HTML body.
+    - Added AI conversion tests for generic content type with clear HTML and non-HTML bodies.
+    - Verification passed: focused tests, `npm run typecheck`, `npm run check:file-lines`, and `npm run verify:release` (25 files, 97 tests).
     - Current turn: read `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, and `.dev-docs/converting-md-prd-split/00-index.md`.
     - Handoff says README OSS readiness, MIT license, and `CLOUDFLARE_SETUP.md` work are complete, verified, committed, and pushed to `origin/main`.
     - Loaded `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, `.dev-docs/converting-md-prd-split/00-index.md`, and focused PRD docs `04` and `11`.
@@ -42,9 +51,9 @@
     - Verification passed after guide changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run check:prd-docs`.
     - Committed and pushed `0d08fb6` (`Add Cloudflare setup guide`) to `origin/main`.
   - Now:
-    - User requested commit and push for the redirect/frontmatter fix.
+    - Committing/pushing/deploying the guarded content-type inference fix.
   - Next:
-    - Stage only intended source/test/ledger files, commit, push to `origin/main`, and report the commit hash.
+    - Deploy the Worker and live-smoke `https://converting.md/https://www.edc.dk/roenne`.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - None.
@@ -74,3 +83,6 @@
 - `test/cache.test.ts`
 - `test/quota.test.ts`
 - `test/route-modes.test.ts`
+- `src/security/content-type.ts`
+- `src/conversion/ai.ts`
+- `test/conversion-edge.test.ts`
