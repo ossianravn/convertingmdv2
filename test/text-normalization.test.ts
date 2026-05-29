@@ -44,10 +44,12 @@ describe("Markdown text normalization", () => {
   });
 
   it("normalizes native, AI, browser, and cached conversion results", async () => {
-    await expect(strategyResult("native")).resolves.toMatchObject({ markdown: "# København" });
-    await expect(strategyResult("ai")).resolves.toMatchObject({ markdown: "# København" });
-    await expect(strategyResult("browser")).resolves.toMatchObject({ markdown: "# København" });
-    await expect(cachedResult()).resolves.toMatchObject({ markdown: "# København", outputBytes: byteLength("# København") });
+    const expected = normalizedMarkdown();
+
+    await expect(strategyResult("native")).resolves.toMatchObject({ markdown: expected });
+    await expect(strategyResult("ai")).resolves.toMatchObject({ markdown: expected });
+    await expect(strategyResult("browser")).resolves.toMatchObject({ markdown: expected });
+    await expect(cachedResult()).resolves.toMatchObject({ markdown: expected, outputBytes: byteLength(expected) });
   });
 });
 
@@ -55,7 +57,7 @@ async function strategyResult(mode: "native" | "ai" | "browser"): Promise<Conver
   const d1 = createMemoryD1();
   const env = makeEnv({
     DB: d1.database,
-    AI: { async toMarkdown() { return { markdown: "# K&#xF8;benhavn" }; } },
+    AI: { async toMarkdown() { return { markdown: rawMarkdown() }; } },
     CLOUDFLARE_ACCOUNT_ID: "acct",
     CLOUDFLARE_BROWSER_API_TOKEN: "token"
   });
@@ -67,7 +69,7 @@ async function strategyResult(mode: "native" | "ai" | "browser"): Promise<Conver
 async function cachedResult(): Promise<ConversionResult> {
   const request = markdownRequest({ mode: "ai" });
   const cacheKey = await createMarkdownCacheKey("https://example.com/page", request);
-  const kv = createMemoryKv({ [cacheKey]: conversionResult("# K&#xF8;benhavn") });
+  const kv = createMemoryKv({ [cacheKey]: conversionResult(rawMarkdown()) });
   const env = makeEnv({ CACHE_KV: kv.namespace });
   const fetchSpy = vi.fn();
   vi.stubGlobal("fetch", fetchSpy);
@@ -80,10 +82,10 @@ async function cachedResult(): Promise<ConversionResult> {
 
 function fetchForMode(mode: "native" | "ai" | "browser") {
   if (mode === "browser") {
-    return vi.fn(async () => new Response("# K&#xF8;benhavn", { headers: { "X-Browser-Ms-Used": "1" } }));
+    return vi.fn(async () => new Response(rawMarkdown(), { headers: { "X-Browser-Ms-Used": "1" } }));
   }
 
-  return vi.fn(async () => new Response("# K&#xF8;benhavn", { headers: { "Content-Type": mode === "native" ? "text/markdown" : "text/html" } }));
+  return vi.fn(async () => new Response(rawMarkdown(), { headers: { "Content-Type": mode === "native" ? "text/markdown" : "text/html" } }));
 }
 
 function context(env: ConversionContext["env"], apiKeyOverrides: Partial<ApiKey> = {}): ConversionContext {
@@ -106,6 +108,14 @@ function markdownRequest(overrides: Partial<MarkdownRequest>): MarkdownRequest {
     browser: { enabled: true, waitUntil: "domcontentloaded", waitForSelector: null, userAgent: null, blockAssets: true },
     ...overrides
   };
+}
+
+function rawMarkdown(): string {
+  return "# K&#xF8;benhavn\n\n[Kontakt](/kontakt)\n\n![Logo](./logo.png)";
+}
+
+function normalizedMarkdown(): string {
+  return "# København\n\n[Kontakt](https://example.com/kontakt)\n\n![Logo](https://example.com/logo.png)";
 }
 
 function apiKey(overrides: Partial<ApiKey> = {}): ApiKey {

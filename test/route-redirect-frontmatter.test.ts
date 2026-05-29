@@ -23,7 +23,10 @@ describe("redirected markdown responses", () => {
 
     expect(response.status, await response.clone().text()).toBe(200);
     expect(response.headers.get("X-Converting-Source-Url")).toBe(finalEdcUrl);
-    expect((await response.text()).startsWith(`---\nurl: ${finalEdcUrl}\ndescription:`)).toBe(true);
+    const markdown = await response.text();
+    expect(markdown.startsWith(`---\nurl: ${finalEdcUrl}\ndescription:`)).toBe(true);
+    expect(markdown).toContain("[Sælg bolig](https://www.edc.dk/saelg-bolig/)");
+    expect(markdown).toContain("![Butik](https://www.edc.dk/images/roenne.jpg)");
   });
 });
 
@@ -85,5 +88,9 @@ title: EDC BornholmerBo, 371, 3700
 image: https://billeder.edc.dk/example.jpg
 ---
 
-# EDC BornholmerBo`;
+# EDC BornholmerBo
+
+[Sælg bolig](/saelg-bolig/)
+
+![Butik](/images/roenne.jpg)`;
 }

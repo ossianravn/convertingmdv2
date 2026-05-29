@@ -1,10 +1,11 @@
 import { decodeHTML } from "entities";
 import { ConvertingError } from "../http/errors";
 import { byteLength } from "../utils/bytes";
+import { absolutizeMarkdownReferences } from "./markdown-references";
 import type { ConversionResult } from "./result";
 
 export function normalizeConversionResult(result: ConversionResult, maxOutputBytes: number): ConversionResult {
-  const markdown = normalizeMarkdownText(result.markdown);
+  const markdown = absolutizeMarkdownReferences(normalizeMarkdownText(result.markdown), result.url);
   const outputBytes = byteLength(markdown);
   if (outputBytes > maxOutputBytes) {
     throw new ConvertingError("output_too_large", "Markdown output exceeded the byte limit.", 413);
