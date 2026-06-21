@@ -32,10 +32,11 @@
     - 2026-06-21 [TOOL] `npm run verify:release` passed its check/env/PRD phases but failed at `npm audit` due existing dependency advisories in `esbuild`, `hono`, `undici`, `vite`, and `ws` dependency paths.
     - 2026-06-21 [TOOL] `npm audit fix` updated the lockfile dependency graph to clean versions of `wrangler`/`miniflare`, `undici`, `ws`, `vite`, `esbuild`, and `hono`.
     - 2026-06-21 [TOOL] `npm run verify:release` passed after the dependency update: 27 test files / 104 tests, env hygiene, PRD docs, `npm audit`, Wrangler dry-run, and health smoke.
+    - 2026-06-21 [TOOL] Committed and pushed dependency audit fix as `81ac235` (`Update dependencies for clean audit`) to `origin/main`.
   - Now:
-    - 2026-06-21 [TOOL] Preparing to commit and push the deploy-blocking audit fix.
+    - 2026-06-21 [TOOL] Dependency audit fix is pushed; Dokploy should rebuild from `origin/main`.
   - Next:
-    - 2026-06-21 [TOOL] Commit/push the dependency fix, then let Dokploy rebuild.
+    - 2026-06-21 [TOOL] If Dokploy still fails, inspect the next build log; expected audit blocker is resolved.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether Dokploy's Docker warnings about secrets-as-ARG/ENV block deploy after audit is fixed; current log shows them as warnings, not the failing step.
