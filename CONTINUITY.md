@@ -40,10 +40,11 @@
     - 2026-06-21 [TOOL] Direct Browser Rendering API probe with Dokploy `CLOUDFLARE_API_TOKEN` also returned `401`; current tokens are not authorized for Browser Rendering REST Quick Actions.
     - 2026-06-21 [CODE] Migrated Browser Run adapter to `env.BROWSER.quickAction("markdown", ...)`, added `browser.binding = "BROWSER"` in `wrangler.jsonc`, removed runtime Browser REST credential requirements, and updated tests/docs/preflight checks.
     - 2026-06-21 [TOOL] `npm run verify:release` passed after binding migration: 27 test files / 106 tests, env hygiene, PRD docs, clean audit, Wrangler dry-run showing `env.BROWSER Browser Run`, and health smoke.
+    - 2026-06-21 [TOOL] Committed and pushed Browser binding migration as `cd045a5` (`Use Browser Run binding for markdown fallback`) to `origin/main`.
   - Now:
-    - 2026-06-21 [TOOL] Browser binding migration is verified locally and ready to commit/push.
+    - 2026-06-21 [TOOL] Browser binding migration is on `origin/main` and ready for Dokploy to redeploy.
   - Next:
-    - 2026-06-21 [TOOL] Commit and push Browser binding migration so Dokploy redeploys the Worker without runtime Browser REST token dependency.
+    - 2026-06-21 [TOOL] Verify production after Dokploy deploys `cd045a5`.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether Dokploy's Docker warnings about secrets-as-ARG/ENV block deploy after audit is fixed; current log shows them as warnings, not the failing step.
