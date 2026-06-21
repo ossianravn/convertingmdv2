@@ -1,6 +1,6 @@
 # Goal (incl. success criteria):
-- 2026-06-21 [USER] Fix live `converting.md` conversions for JS-heavy pages such as Smartbox FAQ pages that return loader/error-shell markdown instead of rendered article content.
-- 2026-06-21 [ASSUMPTION] Success means a generic quality-driven Browser Run fallback works for eligible `mode=auto` requests without Smartbox-specific or Salesforce-specific patching.
+- 2026-06-21 [USER] Unblock Dokploy deployment for the pushed Smartbox Browser Run fallback fix.
+- 2026-06-21 [ASSUMPTION] Success means `npm audit` no longer fails in the Docker build, release checks pass locally, and the dependency fix is committed/pushed to `origin/main`.
 
 # Constraints/Assumptions:
 - 2026-06-21 [CODE] Read `.dev-docs/converting-md-prd-split/00-index.md` before acting; focused docs for this change are `03a`, `05`, `07b`, `08`, `10`, and `11`.
@@ -9,7 +9,8 @@
 - 2026-06-21 [CODE] Keep source files under 300 lines without line-squeezing; do not edit `AGENTS.md`, reset the database, use `git checkout`, or revert unrelated user changes.
 - 2026-06-21 [TOOL] Use `GIT_DIR=.git-local GIT_WORK_TREE=.` for git inspection in this repo.
 - 2026-06-21 [USER] User requested committing and pushing the Smartbox fallback fix so Dokploy can pick it up.
-- 2026-06-21 [ASSUMPTION] Production validation after Dokploy deploy is still pending; the release audit currently fails on dependency advisories.
+- 2026-06-21 [USER] Dokploy build failed at `npm --cache /tmp/npm-cache audit` with advisories in `undici`, `vite`, and `ws` dependency paths.
+- 2026-06-21 [ASSUMPTION] Fix should be dependency/lockfile-only unless audit requires a source/config adjustment.
 
 # Key decisions:
 - 2026-06-21 [CODE] D001 ACTIVE: Keep explicit Browser Run permission (`allowBrowser`) separate from automatic fallback permission (`autoBrowserFallback`) in quota and reservation checks.
@@ -29,14 +30,15 @@
     - 2026-06-21 [CODE] Updated README, release readiness, acceptance matrix, Cloudflare setup, and PRD docs to match the explicit-vs-fallback Browser Run policy.
     - 2026-06-21 [TOOL] Verification passed: focused Vitest files, `npm run typecheck`, `npm run check`, `npm run deploy:dry-run`, `npm run smoke:health`, and `git diff --check`.
     - 2026-06-21 [TOOL] `npm run verify:release` passed its check/env/PRD phases but failed at `npm audit` due existing dependency advisories in `esbuild`, `hono`, `undici`, `vite`, and `ws` dependency paths.
+    - 2026-06-21 [TOOL] `npm audit fix` updated the lockfile dependency graph to clean versions of `wrangler`/`miniflare`, `undici`, `ws`, `vite`, `esbuild`, and `hono`.
+    - 2026-06-21 [TOOL] `npm run verify:release` passed after the dependency update: 27 test files / 104 tests, env hygiene, PRD docs, `npm audit`, Wrangler dry-run, and health smoke.
   - Now:
-    - 2026-06-21 [TOOL] Committing and pushing the local patch for Dokploy pickup.
+    - 2026-06-21 [TOOL] Preparing to commit and push the deploy-blocking audit fix.
   - Next:
-    - 2026-06-21 [TOOL] After Dokploy deploys the pushed commit, smoke-test the Smartbox URL on production.
+    - 2026-06-21 [TOOL] Commit/push the dependency fix, then let Dokploy rebuild.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether to run dependency updates such as `npm audit fix` before deploy; this may change lockfile and transitive versions.
-- 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether Dokploy will deploy despite the known `npm audit` failure; production smoke test is pending until it finishes.
+- 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether Dokploy's Docker warnings about secrets-as-ARG/ENV block deploy after audit is fixed; current log shows them as warnings, not the failing step.
 
 # Working set (files/ids/commands):
 - 2026-06-21 [CODE] `src/auth/anonymous.ts`
@@ -54,6 +56,8 @@
 - 2026-06-21 [TOOL] `npm run typecheck`
 - 2026-06-21 [TOOL] `npm run check`
 - 2026-06-21 [TOOL] `npm run verify:release` failed only at `npm audit`
+- 2026-06-21 [CODE] `package-lock.json`
+- 2026-06-21 [TOOL] `npm run verify:release` passed after dependency update
 - 2026-06-21 [TOOL] `npm run deploy:dry-run`
 - 2026-06-21 [TOOL] `npm run smoke:health`
 - 2026-06-21 [TOOL] `GIT_DIR=.git-local GIT_WORK_TREE=. git diff --check`
