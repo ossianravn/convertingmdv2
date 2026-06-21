@@ -34,6 +34,12 @@ describe("deploy config preflight", () => {
     ]);
   });
 
+  it("rejects missing Browser binding", () => {
+    const { browser: _browser, ...config } = validConfig({});
+
+    expect(findDeployConfigIssues(config)).toEqual([{ path: "browser", message: "BROWSER binding is required." }]);
+  });
+
   it("accepts real resource IDs and safe production vars", () => {
     expect(findDeployConfigIssues(validConfig({}))).toEqual([]);
   });
@@ -62,6 +68,7 @@ interface ConfigOverrides {
 
 function validConfig(overrides: ConfigOverrides) {
   return {
+    browser: { binding: "BROWSER" },
     d1_databases: [{ binding: "DB", database_id: overrides.d1Id ?? "d1-real-id" }],
     kv_namespaces: [{ binding: "CACHE_KV", id: overrides.kvId ?? "kv-real-id" }],
     vars: overrides.vars ?? {

@@ -4,7 +4,7 @@ import { parseConfig } from "../src/config";
 import { convertMarkdown, type ConversionContext } from "../src/conversion/orchestrator";
 import type { ConversionResult } from "../src/conversion/result";
 import type { ApiKey, MarkdownRequest } from "../src/types/api";
-import { makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -18,8 +18,8 @@ describe("guarded browser fallback", () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce(htmlResponse(jsAppShell()))
-      .mockResolvedValueOnce(htmlResponse(jsAppShell()))
-      .mockResolvedValueOnce(browserResponse(renderedMarkdown()));
+      .mockResolvedValueOnce(htmlResponse(jsAppShell()));
+    const browserSpy = vi.fn(async () => browserResponse(renderedMarkdown()));
     vi.stubGlobal("fetch", fetchSpy);
 
     const result = await convertMarkdown(
@@ -28,8 +28,7 @@ describe("guarded browser fallback", () => {
         {
           DB: d1.database,
           AI: { async toMarkdown() { return { markdown: weakMetadataMarkdown(), tokens: 124 }; } },
-          CLOUDFLARE_ACCOUNT_ID: "acct",
-          CLOUDFLARE_BROWSER_API_TOKEN: "token"
+          BROWSER: createBrowserRunStub(browserSpy)
         },
         fallbackKey()
       )
@@ -38,7 +37,8 @@ describe("guarded browser fallback", () => {
     expect(result.method).toBe("browser");
     expect(result.markdown).toContain("90 days");
     expect(result.warnings).toContain("browser_fallback_from_weak_ai");
-    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(browserSpy).toHaveBeenCalledOnce();
   });
 
   it("returns weak AI output with warnings when the browser fallback attempt fails", async () => {
@@ -46,8 +46,8 @@ describe("guarded browser fallback", () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce(htmlResponse(jsAppShell()))
-      .mockResolvedValueOnce(htmlResponse(jsAppShell()))
-      .mockResolvedValueOnce(new Response("failed", { status: 502 }));
+      .mockResolvedValueOnce(htmlResponse(jsAppShell()));
+    const browserSpy = vi.fn(async () => new Response("failed", { status: 502 }));
     vi.stubGlobal("fetch", fetchSpy);
 
     const result = await convertMarkdown(
@@ -56,8 +56,7 @@ describe("guarded browser fallback", () => {
         {
           DB: d1.database,
           AI: { async toMarkdown() { return { markdown: weakMetadataMarkdown(), tokens: 124 }; } },
-          CLOUDFLARE_ACCOUNT_ID: "acct",
-          CLOUDFLARE_BROWSER_API_TOKEN: "token"
+          BROWSER: createBrowserRunStub(browserSpy)
         },
         fallbackKey()
       )
@@ -67,6 +66,7 @@ describe("guarded browser fallback", () => {
     expect(result.warnings).toEqual(
       expect.arrayContaining(["output_too_short_for_source", "browser_fallback_failed:cloudflare_api_error"])
     );
+    expect(browserSpy).toHaveBeenCalledOnce();
   });
 
   it("refreshes weak AI cache entries through Browser Run when the request and key allow it", async () => {
@@ -74,8 +74,7 @@ describe("guarded browser fallback", () => {
     const cacheKey = await createMarkdownCacheKey("https://example.com/page", request);
     const kv = createMemoryKv({ [cacheKey]: weakCachedAiResult() });
     const d1 = createMemoryD1();
-    const fetchSpy = vi.fn().mockResolvedValueOnce(browserResponse(renderedMarkdown()));
-    vi.stubGlobal("fetch", fetchSpy);
+    const browserSpy = vi.fn(async () => browserResponse(renderedMarkdown()));
 
     const result = await convertMarkdown(
       request,
@@ -83,8 +82,7 @@ describe("guarded browser fallback", () => {
         {
           DB: d1.database,
           CACHE_KV: kv.namespace,
-          CLOUDFLARE_ACCOUNT_ID: "acct",
-          CLOUDFLARE_BROWSER_API_TOKEN: "token"
+          BROWSER: createBrowserRunStub(browserSpy)
         },
         fallbackKey()
       )
@@ -92,7 +90,7 @@ describe("guarded browser fallback", () => {
 
     expect(result.method).toBe("browser");
     expect(result.warnings).toContain("browser_fallback_from_weak_cache");
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(browserSpy).toHaveBeenCalledOnce();
   });
 
   it("does not cache weak AI output when fallback is not allowed", async () => {

@@ -6,7 +6,7 @@ import type { ConversionResult } from "../src/conversion/result";
 import { normalizeMarkdownText } from "../src/conversion/text-normalization";
 import type { ApiKey, MarkdownRequest } from "../src/types/api";
 import { byteLength } from "../src/utils/bytes";
-import { makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -58,11 +58,10 @@ async function strategyResult(mode: "native" | "ai" | "browser"): Promise<Conver
   const env = makeEnv({
     DB: d1.database,
     AI: { async toMarkdown() { return { markdown: rawMarkdown() }; } },
-    CLOUDFLARE_ACCOUNT_ID: "acct",
-    CLOUDFLARE_BROWSER_API_TOKEN: "token"
+    BROWSER: createBrowserRunStub(async () => new Response(rawMarkdown(), { headers: { "X-Browser-Ms-Used": "1" } }))
   });
 
-  vi.stubGlobal("fetch", fetchForMode(mode));
+  if (mode !== "browser") vi.stubGlobal("fetch", fetchForMode(mode));
   return convertMarkdown(markdownRequest({ mode }), context(env, { allowBrowser: true }));
 }
 
@@ -81,10 +80,6 @@ async function cachedResult(): Promise<ConversionResult> {
 }
 
 function fetchForMode(mode: "native" | "ai" | "browser") {
-  if (mode === "browser") {
-    return vi.fn(async () => new Response(rawMarkdown(), { headers: { "X-Browser-Ms-Used": "1" } }));
-  }
-
   return vi.fn(async () => new Response(rawMarkdown(), { headers: { "Content-Type": mode === "native" ? "text/markdown" : "text/html" } }));
 }
 

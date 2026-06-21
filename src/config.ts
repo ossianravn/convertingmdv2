@@ -59,8 +59,7 @@ function assertProductionSecrets(env: Env): void {
   const missing = [
     ["ADMIN_TOKEN", env.ADMIN_TOKEN],
     ["API_KEY_PEPPER", env.API_KEY_PEPPER],
-    ["CLOUDFLARE_ACCOUNT_ID", env.CLOUDFLARE_ACCOUNT_ID],
-    ["CLOUDFLARE_BROWSER_API_TOKEN", env.CLOUDFLARE_BROWSER_API_TOKEN]
+    ["BROWSER", env.BROWSER]
   ]
     .filter(([, value]) => !value)
     .map(([name]) => name);
@@ -69,4 +68,3 @@ function assertProductionSecrets(env: Env): void {
     throw new Error(`Missing required production secrets: ${missing.join(", ")}`);
   }
 }
-

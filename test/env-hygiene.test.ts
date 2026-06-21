@@ -7,9 +7,7 @@ describe("env hygiene check", () => {
       findEnvHygieneIssues({
         devVarsExample: [
           "ADMIN_TOKEN=replace_me",
-          "API_KEY_PEPPER=replace_me",
-          "CLOUDFLARE_ACCOUNT_ID=replace_me",
-          "CLOUDFLARE_BROWSER_API_TOKEN=replace_me"
+          "API_KEY_PEPPER=replace_me"
         ].join("\n"),
         gitignore: ["node_modules/", ".dev.vars", ".env", ".env.*"].join("\n")
       })
@@ -21,8 +19,7 @@ describe("env hygiene check", () => {
       devVarsExample: [
         "ADMIN_TOKEN=replace_me",
         "ADMIN_TOKEN=replace_me",
-        "API_KEY_PEPPER=actual-secret",
-        "CLOUDFLARE_ACCOUNT_ID=replace_me"
+        "API_KEY_PEPPER=actual-secret"
       ].join("\n"),
       gitignore: [".dev.vars", ".env", ".env.*"].join("\n")
     });
@@ -32,10 +29,6 @@ describe("env hygiene check", () => {
         path: ".dev.vars.example.API_KEY_PEPPER",
         message: 'API_KEY_PEPPER must use the placeholder value "replace_me" in the example file.'
       },
-      {
-        path: ".dev.vars.example.CLOUDFLARE_BROWSER_API_TOKEN",
-        message: "CLOUDFLARE_BROWSER_API_TOKEN placeholder is required."
-      },
       { path: ".dev.vars.example.ADMIN_TOKEN", message: "ADMIN_TOKEN must be listed only once." }
     ]);
   });
@@ -44,9 +37,7 @@ describe("env hygiene check", () => {
     const issues = findEnvHygieneIssues({
       devVarsExample: [
         "ADMIN_TOKEN=replace_me",
-        "API_KEY_PEPPER=replace_me",
-        "CLOUDFLARE_ACCOUNT_ID=replace_me",
-        "CLOUDFLARE_BROWSER_API_TOKEN=replace_me"
+        "API_KEY_PEPPER=replace_me"
       ].join("\n"),
       gitignore: "node_modules/\n"
     });

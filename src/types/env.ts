@@ -31,12 +31,11 @@ export interface AiBinding {
 
 export interface Env {
   AI: AiBinding;
+  BROWSER?: BrowserRun;
   DB: D1Database;
   CACHE_KV: KVNamespace;
   ADMIN_TOKEN?: string;
   API_KEY_PEPPER?: string;
-  CLOUDFLARE_ACCOUNT_ID?: string;
-  CLOUDFLARE_BROWSER_API_TOKEN?: string;
   ENVIRONMENT?: string;
   REQUIRE_AUTH?: string;
   ALLOW_ANON?: string;

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { app } from "../src/app";
-import { makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -14,8 +14,8 @@ describe("anonymous automatic browser fallback", () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce(htmlResponse(scriptHeavyShell()))
-      .mockResolvedValueOnce(htmlResponse(scriptHeavyShell()))
-      .mockResolvedValueOnce(browserResponse("# Hvordan booker jeg et ophold?\n\nTrin 1: Log ind og registrer dit gavekort."));
+      .mockResolvedValueOnce(htmlResponse(scriptHeavyShell()));
+    const browserSpy = vi.fn(async () => browserResponse("# Hvordan booker jeg et ophold?\n\nTrin 1: Log ind og registrer dit gavekort."));
     vi.stubGlobal("fetch", fetchSpy);
 
     const env = makeEnv({
@@ -23,8 +23,7 @@ describe("anonymous automatic browser fallback", () => {
       CACHE_KV: createMemoryKv().namespace,
       REQUIRE_AUTH: "false",
       ALLOW_ANON: "true",
-      CLOUDFLARE_ACCOUNT_ID: "acct",
-      CLOUDFLARE_BROWSER_API_TOKEN: "token",
+      BROWSER: createBrowserRunStub(browserSpy),
       AI: { async toMarkdown() { return { markdown: weakShellMarkdown(), tokens: 104 }; } }
     });
 
@@ -35,7 +34,8 @@ describe("anonymous automatic browser fallback", () => {
     expect(response.headers.get("X-Browser-Ms-Used")).toBe("432");
     expect(response.headers.get("X-Converting-Warnings")).toContain("browser_fallback_from_weak_ai");
     expect(await response.text()).toContain("Hvordan booker jeg et ophold?");
-    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(browserSpy).toHaveBeenCalledOnce();
   });
 });
 

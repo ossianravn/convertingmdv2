@@ -6,6 +6,10 @@
   "ai": {
     "binding": "AI"
   },
+  "browser": {
+    "binding": "BROWSER",
+    "remote": true
+  },
   "d1_databases": [
     {
       "binding": "DB",

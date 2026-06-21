@@ -13,9 +13,7 @@ export interface EnvHygieneInput {
 
 const requiredExampleVars = [
   "ADMIN_TOKEN",
-  "API_KEY_PEPPER",
-  "CLOUDFLARE_ACCOUNT_ID",
-  "CLOUDFLARE_BROWSER_API_TOKEN"
+  "API_KEY_PEPPER"
 ] as const;
 
 const requiredIgnoredFiles = [".dev.vars", ".env", ".env.*"] as const;

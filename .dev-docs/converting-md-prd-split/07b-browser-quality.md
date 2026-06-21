@@ -13,7 +13,7 @@ Behavior:
 Require allow_browser=true for explicit browser mode.
 Require auto_browser_fallback=true for automatic fallback.
 Require browser budget reservation.
-Call Cloudflare Browser Run /markdown endpoint.
+Call Cloudflare Browser Run through env.BROWSER.quickAction("markdown", ...).
 Pass URL, not raw HTML, for JS-heavy pages.
 Use domcontentloaded by default.
 Allow networkidle0/networkidle2 only when explicitly requested.
@@ -22,10 +22,10 @@ Read X-Browser-Ms-Used from response headers.
 Return Markdown result.
 ```
 
-Endpoint:
+Binding:
 
 ```txt
-https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}/browser-rendering/markdown
+BROWSER
 ```
 
 Request body default:

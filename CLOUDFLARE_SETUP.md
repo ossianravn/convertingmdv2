@@ -114,17 +114,14 @@ Set every required production secret:
 ```bash
 npx wrangler secret put ADMIN_TOKEN
 npx wrangler secret put API_KEY_PEPPER
-npx wrangler secret put CLOUDFLARE_ACCOUNT_ID
-npx wrangler secret put CLOUDFLARE_BROWSER_API_TOKEN
 ```
 
 Use strong random values for `ADMIN_TOKEN` and `API_KEY_PEPPER`. Do not rotate
 `API_KEY_PEPPER` unless you intend to invalidate existing API keys.
 
-If Browser Run is not being used, set `DISABLE_BROWSER` to `"true"`. This app
-still validates that the browser token secret exists in production, so store a non-empty value for
-`CLOUDFLARE_BROWSER_API_TOKEN`; replace it with a real Cloudflare token before
-enabling Browser Run.
+Browser Run uses the `BROWSER` binding in `wrangler.jsonc`; no runtime Browser
+API token secret is required. If Browser Run is not being used, set
+`DISABLE_BROWSER` to `"true"`.
 
 Do not commit `.dev.vars`, raw API keys, admin tokens, peppers, or API tokens.
 

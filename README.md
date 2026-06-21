@@ -129,8 +129,6 @@ Fill `.dev.vars` with local test values:
 ```txt
 ADMIN_TOKEN=replace_me
 API_KEY_PEPPER=replace_me
-CLOUDFLARE_ACCOUNT_ID=replace_me
-CLOUDFLARE_BROWSER_API_TOKEN=replace_me
 ```
 
 Health check:
@@ -225,9 +223,9 @@ Set secrets:
 ```bash
 wrangler secret put ADMIN_TOKEN
 wrangler secret put API_KEY_PEPPER
-wrangler secret put CLOUDFLARE_ACCOUNT_ID
-wrangler secret put CLOUDFLARE_BROWSER_API_TOKEN
 ```
+
+Browser Run uses the `BROWSER` binding in `wrangler.jsonc`; no runtime Browser API token secret is required.
 
 Deploy:
 
@@ -248,6 +246,7 @@ NIXPACKS_INSTALL_CMD=npm run install:deploy-runner
 - choose public address-bar mode or private API-key mode explicitly
 - keep `DISABLE_IMAGE_CONVERSION=true` unless intentionally enabling images
 - enable Browser Run only for trusted keys
+- keep the `BROWSER` binding configured when Browser Run is enabled
 - use strong `ADMIN_TOKEN` and `API_KEY_PEPPER` secrets
 - keep personal and test keys on conservative limits
 - apply the D1 migration and bind KV before deploy

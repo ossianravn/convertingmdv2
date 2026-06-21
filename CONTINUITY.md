@@ -11,6 +11,8 @@
 - 2026-06-21 [USER] User requested committing and pushing the Smartbox fallback fix so Dokploy can pick it up.
 - 2026-06-21 [USER] Dokploy build failed at `npm --cache /tmp/npm-cache audit` with advisories in `undici`, `vite`, and `ws` dependency paths.
 - 2026-06-21 [ASSUMPTION] Fix should be dependency/lockfile-only unless audit requires a source/config adjustment.
+- 2026-06-21 [USER] Live Smartbox URL still returns the Salesforce/Aura shell; user requested no guessing.
+- 2026-06-21 [USER] User requested migrating Browser Run from runtime REST token credentials to the Cloudflare `BROWSER` Worker binding.
 
 # Key decisions:
 - 2026-06-21 [CODE] D001 ACTIVE: Keep explicit Browser Run permission (`allowBrowser`) separate from automatic fallback permission (`autoBrowserFallback`) in quota and reservation checks.
@@ -33,13 +35,20 @@
     - 2026-06-21 [TOOL] `npm audit fix` updated the lockfile dependency graph to clean versions of `wrangler`/`miniflare`, `undici`, `ws`, `vite`, `esbuild`, and `hono`.
     - 2026-06-21 [TOOL] `npm run verify:release` passed after the dependency update: 27 test files / 104 tests, env hygiene, PRD docs, `npm audit`, Wrangler dry-run, and health smoke.
     - 2026-06-21 [TOOL] Committed and pushed dependency audit fix as `81ac235` (`Update dependencies for clean audit`) to `origin/main`.
+    - 2026-06-21 [TOOL] Live Smartbox response is `x-converting-cache: MISS`, `x-converting-method: ai`, and includes `browser_fallback_from_weak_ai,browser_fallback_failed:cloudflare_api_error`; deployed fallback is running but failing at Browser Run.
+    - 2026-06-21 [TOOL] Direct Browser Rendering API probe with Dokploy container `CLOUDFLARE_BROWSER_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` returned Cloudflare `401` / code `10000` / `Authentication error`; token verification endpoint says the token is active.
+    - 2026-06-21 [TOOL] Direct Browser Rendering API probe with Dokploy `CLOUDFLARE_API_TOKEN` also returned `401`; current tokens are not authorized for Browser Rendering REST Quick Actions.
+    - 2026-06-21 [CODE] Migrated Browser Run adapter to `env.BROWSER.quickAction("markdown", ...)`, added `browser.binding = "BROWSER"` in `wrangler.jsonc`, removed runtime Browser REST credential requirements, and updated tests/docs/preflight checks.
+    - 2026-06-21 [TOOL] `npm run verify:release` passed after binding migration: 27 test files / 106 tests, env hygiene, PRD docs, clean audit, Wrangler dry-run showing `env.BROWSER Browser Run`, and health smoke.
   - Now:
-    - 2026-06-21 [TOOL] Dependency audit fix is pushed; Dokploy should rebuild from `origin/main`.
+    - 2026-06-21 [TOOL] Browser binding migration is verified locally and ready to commit/push.
   - Next:
-    - 2026-06-21 [TOOL] If Dokploy still fails, inspect the next build log; expected audit blocker is resolved.
+    - 2026-06-21 [TOOL] Commit and push Browser binding migration so Dokploy redeploys the Worker without runtime Browser REST token dependency.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether Dokploy's Docker warnings about secrets-as-ARG/ENV block deploy after audit is fixed; current log shows them as warnings, not the failing step.
+- 2026-06-21 [TOOL] CONFIRMED: current Dokploy token env values are active Cloudflare tokens but rejected by Browser Rendering REST API with `401 Authentication error`.
+- 2026-06-21 [TOOL] CONFIRMED: Wrangler 4.103.0 dry-run accepts the `BROWSER` binding and lists it as `env.BROWSER Browser Run`.
 
 # Working set (files/ids/commands):
 - 2026-06-21 [CODE] `src/auth/anonymous.ts`

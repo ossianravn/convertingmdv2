@@ -73,7 +73,7 @@ Covered criteria:
 
 - Native Markdown captures `x-markdown-tokens`, rejects HTML fallback cases, and enforces output byte limits.
 - Workers AI receives HTML hostname and `cssSelector` options, blocks images by default, and exposes token counts when returned.
-- Browser Run requires explicit key permission, sends the expected Cloudflare REST body with wait, selector/user-agent, and asset-blocking options, records `X-Browser-Ms-Used`, unwraps JSON Markdown responses, charges reserved max when usage is missing, respects `DISABLE_BROWSER`, and releases reservations on failure.
+- Browser Run requires explicit key permission, calls the Cloudflare `BROWSER` binding with wait, selector/user-agent, and asset-blocking options, records `X-Browser-Ms-Used`, unwraps JSON Markdown responses, charges reserved max when usage is missing, respects `DISABLE_BROWSER`, and releases reservations on failure.
 - Auto mode performs native-to-AI fallback and only uses Browser Run fallback when key, config, budget, and quality signals allow it.
 - Weak AI output from JavaScript app shells, metadata-only pages, JavaScript-required pages, or boilerplate-only pages is detected without relying on English-only content.
 - Native, Workers AI, Browser Run, and cached Markdown outputs are decoded for HTML character references and normalized to NFC Unicode before response/cache accounting.

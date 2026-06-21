@@ -3,7 +3,7 @@ import { parseConfig } from "../src/config";
 import { createMarkdownCacheKey } from "../src/cache/cache-key";
 import { convertMarkdown, type ConversionContext } from "../src/conversion/orchestrator";
 import type { ApiKey, MarkdownRequest } from "../src/types/api";
-import { makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -82,9 +82,7 @@ describe("conversion orchestrator", () => {
     const result = await convertMarkdown(
       markdownRequest({ mode: "auto", browser: { enabled: true } }),
       context({
-        AI: { async toMarkdown() { return { markdown: "" }; } },
-        CLOUDFLARE_ACCOUNT_ID: "acct",
-        CLOUDFLARE_BROWSER_API_TOKEN: "token"
+        AI: { async toMarkdown() { return { markdown: "" }; } }
       })
     );
 
@@ -97,8 +95,8 @@ describe("conversion orchestrator", () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce(new Response("<html></html>", { headers: { "Content-Type": "text/html" } }))
-      .mockResolvedValueOnce(new Response("<html></html>", { headers: { "Content-Type": "text/html" } }))
-      .mockResolvedValueOnce(new Response("# Browser", { headers: { "X-Browser-Ms-Used": "22" } }));
+      .mockResolvedValueOnce(new Response("<html></html>", { headers: { "Content-Type": "text/html" } }));
+    const browserSpy = vi.fn(async () => new Response("# Browser", { headers: { "X-Browser-Ms-Used": "22" } }));
     vi.stubGlobal("fetch", fetchSpy);
 
     const result = await convertMarkdown(
@@ -107,15 +105,15 @@ describe("conversion orchestrator", () => {
         {
           DB: d1.database,
           AI: { async toMarkdown() { return { markdown: "" }; } },
-          CLOUDFLARE_ACCOUNT_ID: "acct",
-          CLOUDFLARE_BROWSER_API_TOKEN: "token"
+          BROWSER: createBrowserRunStub(browserSpy)
         },
         { allowBrowser: true, autoBrowserFallback: true }
       )
     );
 
     expect(result).toMatchObject({ method: "browser", markdown: "# Browser", browserMsUsed: 22 });
-    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(browserSpy).toHaveBeenCalledOnce();
   });
 });
 

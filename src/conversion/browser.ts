@@ -20,20 +20,13 @@ export async function tryBrowserMarkdown(
   const reservation = await reserveBrowserBudget(env, apiKey, config, now, purpose);
   let committed = false;
 
-  if (!env.CLOUDFLARE_ACCOUNT_ID || !env.CLOUDFLARE_BROWSER_API_TOKEN) {
+  if (!env.BROWSER) {
     await releaseBrowserReservation(env, reservation, now);
-    throw new ConvertingError("cloudflare_api_error", "Browser Run credentials are not configured.", 502);
+    throw new ConvertingError("cloudflare_api_error", "Browser Run binding is not configured.", 502);
   }
 
   try {
-    const response = await fetch(browserEndpoint(env.CLOUDFLARE_ACCOUNT_ID), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${env.CLOUDFLARE_BROWSER_API_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(browserBody(request, purpose))
-    });
+    const response = await callBrowserRun(env.BROWSER, request, purpose);
 
     if (!response.ok) {
       throw new ConvertingError("cloudflare_api_error", "Browser Run Markdown conversion failed.", 502);
@@ -70,11 +63,19 @@ export async function tryBrowserMarkdown(
   }
 }
 
-function browserEndpoint(accountId: string): string {
-  return `https://api.cloudflare.com/client/v4/accounts/${accountId}/browser-rendering/markdown`;
+async function callBrowserRun(
+  browser: BrowserRun,
+  request: MarkdownRequest,
+  purpose: BrowserConversionPurpose
+): Promise<Response> {
+  try {
+    return await browser.quickAction("markdown", browserBody(request, purpose));
+  } catch (error) {
+    throw new ConvertingError("cloudflare_api_error", errorMessage(error, "Browser Run Markdown conversion failed."), 502);
+  }
 }
 
-function browserBody(request: MarkdownRequest, purpose: BrowserConversionPurpose): Record<string, unknown> {
+function browserBody(request: MarkdownRequest, purpose: BrowserConversionPurpose): BrowserRunMarkdownOptions {
   const waitUntil = fallbackWaitUntil(request, purpose);
   return {
     url: request.url,
@@ -88,6 +89,10 @@ function browserBody(request: MarkdownRequest, purpose: BrowserConversionPurpose
     ...(request.browser.userAgent ? { userAgent: request.browser.userAgent } : {}),
     ...(request.browser.blockAssets ? { rejectRequestPattern: [assetBlockPattern(purpose)] } : {})
   };
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
 }
 
 function fallbackWaitUntil(request: MarkdownRequest, purpose: BrowserConversionPurpose): MarkdownRequest["browser"]["waitUntil"] {

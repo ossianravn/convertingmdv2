@@ -17,10 +17,19 @@ export function findDeployConfigIssues(config: unknown): DeployConfigIssue[] {
   }
 
   return [
+    ...browserBindingIssues(config["browser"]),
     ...bindingIssues(config["d1_databases"], "d1_databases", "DB", "database_id"),
     ...bindingIssues(config["kv_namespaces"], "kv_namespaces", "CACHE_KV", "id"),
     ...productionVarIssues(config["vars"])
   ];
+}
+
+function browserBindingIssues(value: unknown): DeployConfigIssue[] {
+  if (!isRecord(value)) return [{ path: "browser", message: "BROWSER binding is required." }];
+  if (value["binding"] !== "BROWSER") {
+    return [{ path: "browser.binding", message: 'browser binding must be "BROWSER".' }];
+  }
+  return [];
 }
 
 function bindingIssues(value: unknown, path: string, binding: string, idKey: string): DeployConfigIssue[] {

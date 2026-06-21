@@ -47,6 +47,7 @@ Before a real deployment:
 - Replace `REPLACE_ME` D1 and KV IDs in `wrangler.jsonc`.
 - Confirm `npm run deploy:preflight` passes.
 - Set strong production secrets with `wrangler secret put`.
+- Confirm `wrangler.jsonc` includes the `BROWSER` binding when Browser Run is enabled.
 - Apply the production D1 migration with `npm run db:migrate`.
 - The current `wrangler.jsonc` deploys temporary browser address-bar mode:
   `REQUIRE_AUTH=false` and `ALLOW_ANON=true`. Restore private mode by setting

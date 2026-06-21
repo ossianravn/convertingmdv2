@@ -7,6 +7,7 @@ export function makeEnv(overrides: Partial<Env> = {}): Env {
         return { markdown: "# Mock" };
       }
     },
+    BROWSER: createBrowserRunStub(),
     DB: createD1Stub(),
     CACHE_KV: createKvStub(),
     ENVIRONMENT: "development",
@@ -24,6 +25,16 @@ export function makeEnv(overrides: Partial<Env> = {}): Env {
     GLOBAL_MONTHLY_IMAGE_LIMIT: "500",
     ...overrides
   };
+}
+
+export function createBrowserRunStub(
+  quickAction: (action: string, options: unknown) => Promise<Response> = defaultBrowserRunQuickAction
+): BrowserRun {
+  return { quickAction } as unknown as BrowserRun;
+}
+
+async function defaultBrowserRunQuickAction(): Promise<Response> {
+  throw new Error("Browser Run stub was called unexpectedly.");
 }
 
 function createD1Stub(): D1Database {
@@ -44,4 +55,3 @@ function createKvStub(): KVNamespace {
     }
   } as unknown as KVNamespace;
 }
-

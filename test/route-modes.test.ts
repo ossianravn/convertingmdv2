@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { hashApiKey } from "../src/auth/hash";
 import { app } from "../src/app";
 import { getPeriodKeys } from "../src/usage/periods";
-import { makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv } from "./helpers";
 import { apiKeyRow, createMemoryD1, type CounterDbRow } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -43,10 +43,11 @@ describe("conversion mode routes", () => {
   });
 
   it("runs browser mode only for keys with browser permission", async () => {
-    const setup = await authedSetup({ allow_browser: 1, daily_browser_ms_limit: 20000, monthly_browser_ms_limit: 40000 });
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response("# Browser", { headers: { "X-Browser-Ms-Used": "321" } }))
+    const browserSpy = vi.fn(async () => new Response("# Browser", { headers: { "X-Browser-Ms-Used": "321" } }));
+    const setup = await authedSetup(
+      { allow_browser: 1, daily_browser_ms_limit: 20000, monthly_browser_ms_limit: 40000 },
+      createMemoryKv(),
+      browserSpy
     );
 
     const response = await app.fetch(markdownPost(setup.rawKey, { mode: "browser" }), setup.env);
@@ -56,6 +57,7 @@ describe("conversion mode routes", () => {
     expect(response.headers.get("X-Browser-Ms-Used")).toBe("321");
     expect(periodCounter(setup.d1.counters, "key", "day")?.browser_requests).toBe(1);
     expect(periodCounter(setup.d1.counters, "global", "month")?.browser_ms_used).toBe(321);
+    expect(browserSpy).toHaveBeenCalledOnce();
   });
 
   it("does not count conversion-specific counters on cache hits", async () => {
@@ -74,7 +76,7 @@ describe("conversion mode routes", () => {
   });
 });
 
-async function authedSetup(overrides = {}, kv = createMemoryKv()) {
+async function authedSetup(overrides = {}, kv = createMemoryKv(), browserSpy?: (action: string, options: unknown) => Promise<Response>) {
   const rawKey = "cmd_live_modes_secret";
   const pepper = "pepper";
   const d1 = createMemoryD1();
@@ -95,8 +97,7 @@ async function authedSetup(overrides = {}, kv = createMemoryKv()) {
       DB: d1.database,
       CACHE_KV: kv.namespace,
       API_KEY_PEPPER: pepper,
-      CLOUDFLARE_ACCOUNT_ID: "acct",
-      CLOUDFLARE_BROWSER_API_TOKEN: "token"
+      ...(browserSpy ? { BROWSER: createBrowserRunStub(browserSpy) } : {})
     })
   };
 }

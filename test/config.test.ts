@@ -18,5 +18,11 @@ describe("config parsing", () => {
   it("requires secrets in production", () => {
     expect(() => parseConfig(makeEnv({ ENVIRONMENT: "production" }))).toThrow("Missing required production secrets");
   });
-});
 
+  it("requires the Browser binding in production", () => {
+    const env = makeEnv({ ENVIRONMENT: "production", ADMIN_TOKEN: "admin", API_KEY_PEPPER: "pepper" });
+    delete env.BROWSER;
+
+    expect(() => parseConfig(env)).toThrow("BROWSER");
+  });
+});

@@ -13,6 +13,10 @@
   "ai": {
     "binding": "AI"
   },
+  "browser": {
+    "binding": "BROWSER",
+    "remote": true
+  },
   "d1_databases": [
     {
       "binding": "DB",
@@ -50,8 +54,6 @@
 ```txt
 ADMIN_TOKEN=replace_me
 API_KEY_PEPPER=replace_me
-CLOUDFLARE_ACCOUNT_ID=replace_me
-CLOUDFLARE_BROWSER_API_TOKEN=replace_me
 ```
 
 Do not commit `.dev.vars`.
@@ -64,12 +66,11 @@ The Worker `Env` type must include:
 
 ```txt
 AI                      Workers AI binding
+BROWSER                 Browser Run binding
 DB                      D1Database binding
 CACHE_KV                KVNamespace binding
 ADMIN_TOKEN             secret
 API_KEY_PEPPER          secret
-CLOUDFLARE_ACCOUNT_ID   secret
-CLOUDFLARE_BROWSER_API_TOKEN secret
 ```
 
 The Worker must fail loudly if required secrets are missing in production.
@@ -126,8 +127,6 @@ Set secrets:
 ```bash
 wrangler secret put ADMIN_TOKEN
 wrangler secret put API_KEY_PEPPER
-wrangler secret put CLOUDFLARE_ACCOUNT_ID
-wrangler secret put CLOUDFLARE_BROWSER_API_TOKEN
 ```
 
 Deploy:
