@@ -4,6 +4,8 @@ import type { Env } from "../types/env";
 import { getPeriodKeys } from "./periods";
 import { getCounterValue, getRequestCount, incrementCounterForPeriods, incrementRequests } from "./counters";
 
+export type BrowserPermission = "explicit" | "fallback";
+
 export interface RequestQuotaResult {
   dailyRemaining: number;
   monthlyRemaining: number;
@@ -25,8 +27,9 @@ export async function enforceRequestQuota(env: Env, apiKey: ApiKey, now: Date): 
   };
 }
 
-export function assertBrowserAllowed(apiKey: ApiKey, disabled: boolean): void {
-  if (disabled || !apiKey.allowBrowser) {
+export function assertBrowserAllowed(apiKey: ApiKey, disabled: boolean, permission: BrowserPermission = "explicit"): void {
+  const allowed = permission === "fallback" ? apiKey.autoBrowserFallback : apiKey.allowBrowser;
+  if (disabled || !allowed) {
     throw new ConvertingError("browser_not_allowed", "Browser conversion is not allowed for this API key.", 403);
   }
 }

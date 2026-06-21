@@ -5,7 +5,7 @@ import type { Env } from "../types/env";
 import type { UsagePeriod, UsageScope } from "../types/usage";
 import { getCounterRow, incrementCounterForPeriods } from "./counters";
 import { getPeriodKeys } from "./periods";
-import { assertBrowserAllowed } from "./quota";
+import { assertBrowserAllowed, type BrowserPermission } from "./quota";
 
 export interface BrowserReservation {
   keyId: string;
@@ -16,9 +16,10 @@ export async function reserveBrowserBudget(
   env: Env,
   apiKey: ApiKey,
   config: AppConfig,
-  now: Date
+  now: Date,
+  permission: BrowserPermission = "explicit"
 ): Promise<BrowserReservation> {
-  assertBrowserAllowed(apiKey, config.disableBrowser);
+  assertBrowserAllowed(apiKey, config.disableBrowser, permission);
 
   const reservedMs = config.maxBrowserMsPerRequest;
   const periods = getPeriodKeys(now);

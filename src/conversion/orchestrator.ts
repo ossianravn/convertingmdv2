@@ -22,7 +22,7 @@ export interface ConversionContext {
 
 export async function convertMarkdown(request: MarkdownRequest, context: ConversionContext): Promise<ConversionResult> {
   const normalizedUrl = validateAndNormalizeUrl(request.url);
-  const normalizedRequest = { ...request, url: normalizedUrl };
+  const normalizedRequest = withConfiguredAutoBrowserFallback({ ...request, url: normalizedUrl }, context);
   const cacheKey = await createMarkdownCacheKey(normalizedUrl, normalizedRequest);
   const cached = await readCachedResult(cacheKey, normalizedRequest, context);
   if (cached) return handleCachedResult(cacheKey, normalizedRequest, context, cached);
@@ -36,7 +36,9 @@ export async function convertMarkdown(request: MarkdownRequest, context: Convers
   }
 
   if (request.mode === "browser") {
-    return convertWithCache(cacheKey, normalizedRequest, context, () => tryBrowserMarkdown(context.env, normalizedRequest, context.apiKey, context.config, context.requestId));
+    return convertWithCache(cacheKey, normalizedRequest, context, () =>
+      tryBrowserMarkdown(context.env, normalizedRequest, context.apiKey, context.config, context.requestId, "explicit")
+    );
   }
 
   return convertAuto(cacheKey, normalizedRequest, context);
@@ -153,7 +155,7 @@ async function tryBrowserFallback(
 ): Promise<ConversionResult | null> {
   try {
     const browser = withWarnings(
-      finalizeResult(await tryBrowserMarkdown(context.env, request, context.apiKey, context.config, context.requestId), context),
+      finalizeResult(await tryBrowserMarkdown(context.env, request, context.apiKey, context.config, context.requestId, "fallback"), context),
       [trigger]
     );
     const assessment = assessConversionQuality(browser);
@@ -196,7 +198,15 @@ function fallbackFailureWarning(error: unknown): string {
 }
 
 function canUseBrowserFallback(request: MarkdownRequest, apiKey: ApiKey, config: AppConfig): boolean {
-  return request.browser.enabled && apiKey.allowBrowser && apiKey.autoBrowserFallback && !config.disableBrowser;
+  return request.browser.enabled && apiKey.autoBrowserFallback && !config.disableBrowser;
+}
+
+function withConfiguredAutoBrowserFallback(request: MarkdownRequest, context: ConversionContext): MarkdownRequest {
+  if (request.mode !== "auto" || request.browser.enabled || !context.apiKey.autoBrowserFallback || context.config.disableBrowser) {
+    return request;
+  }
+
+  return { ...request, browser: { ...request.browser, enabled: true } };
 }
 
 function canFallBack(error: unknown): boolean {

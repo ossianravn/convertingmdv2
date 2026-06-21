@@ -121,9 +121,8 @@ npx wrangler secret put CLOUDFLARE_BROWSER_API_TOKEN
 Use strong random values for `ADMIN_TOKEN` and `API_KEY_PEPPER`. Do not rotate
 `API_KEY_PEPPER` unless you intend to invalidate existing API keys.
 
-If Browser Run is not being used, set `DISABLE_BROWSER` to `"true"` and keep
-Browser Run disabled for all keys. This app still validates that the browser
-token secret exists in production, so store a non-empty value for
+If Browser Run is not being used, set `DISABLE_BROWSER` to `"true"`. This app
+still validates that the browser token secret exists in production, so store a non-empty value for
 `CLOUDFLARE_BROWSER_API_TOKEN`; replace it with a real Cloudflare token before
 enabling Browser Run.
 

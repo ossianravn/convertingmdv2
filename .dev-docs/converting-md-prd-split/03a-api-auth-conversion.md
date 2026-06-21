@@ -108,11 +108,11 @@ Important behavior:
 ```txt
 mode=auto may try native and AI.
 mode=auto may only fall back to browser if:
-  - browser.enabled=true in request
-  - the API key allows browser
   - the API key allows automatic browser fallback
   - global browser kill switch is off
   - per-key and global browser-ms budgets allow it
+
+mode=browser still requires explicit browser permission on the API key.
 ```
 
 ## GET /v1/markdown?url=...

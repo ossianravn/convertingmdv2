@@ -22,7 +22,7 @@ Open a page by prefixing its full URL with `https://converting.md/`:
 https://converting.md/https://www.edc.dk/nyhedsartikler/flere-lejligheder-til-salg-i-koebenhavn/
 ```
 
-That convenience route uses default non-browser conversion options. It is meant
+That convenience route uses default automatic conversion options. It is meant
 for quick page-to-Markdown conversion and does not accept API keys in query
 strings.
 
@@ -35,7 +35,9 @@ ALLOW_ANON=true
 ```
 
 When anonymous conversion is enabled, requests are tracked as `anon_public`.
-Browser Run and image conversion still remain blocked for anonymous traffic.
+Explicit Browser Run and image conversion still remain blocked for anonymous
+traffic. Automatic Browser Run fallback may run for weak JavaScript-heavy pages
+only when Browser Run is globally enabled and shared browser budgets allow it.
 
 ## What It Does
 
@@ -106,8 +108,6 @@ browser  Browser Run /markdown strategy only
 In `mode=auto`, weak AI output from JavaScript app shells, metadata-only pages,
 or boilerplate-only pages can fall back to Browser Run only when:
 
-- the request explicitly sends `browser.enabled=true`
-- the API key has `allowBrowser=true`
 - the API key has `autoBrowserFallback=true`
 - Browser Run is globally enabled
 - browser-ms reservation and quota checks pass

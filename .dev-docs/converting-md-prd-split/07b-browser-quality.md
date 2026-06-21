@@ -10,7 +10,8 @@ src/conversion/browser.ts
 Behavior:
 
 ```txt
-Require allow_browser=true.
+Require allow_browser=true for explicit browser mode.
+Require auto_browser_fallback=true for automatic fallback.
 Require browser budget reservation.
 Call Cloudflare Browser Run /markdown endpoint.
 Pass URL, not raw HTML, for JS-heavy pages.
@@ -73,4 +74,4 @@ conversion returned an explicit error marker
 
 Do not over-engineer quality scoring in v1.
 
-If AI output is weak and browser fallback is not explicitly allowed, return the AI output if it exists, or return the AI error if it failed.
+If AI output is weak and automatic browser fallback is not allowed, return the AI output if it exists, or return the AI error if it failed.

@@ -1,104 +1,59 @@
 # Goal (incl. success criteria):
-- Fix live conversion for `https://converting.md/https://www.edc.dk/roenne` and keep `url: {url}` as the first frontmatter field in all successful markdown returns.
-- Success means the live EDC URL converts successfully, redirects are followed with PRD-required validation, guarded HTML content-type inference handles EDC's production response, regression tests cover the behavior, verification passes, and changes are committed/pushed/deployed.
+- 2026-06-21 [USER] Fix live `converting.md` conversions for JS-heavy pages such as Smartbox FAQ pages that return loader/error-shell markdown instead of rendered article content.
+- 2026-06-21 [ASSUMPTION] Success means a generic quality-driven Browser Run fallback works for eligible `mode=auto` requests without Smartbox-specific or Salesforce-specific patching.
 
 # Constraints/Assumptions:
-- Read `.dev-docs/converting-md-prd-split/00-index.md` first; for this bug fix, use focused PRD docs `06a-url-security.md`, `08-routes-responses-errors.md`, and tests docs if needed.
-- Current production Wrangler config is temporary browser address-bar mode: `REQUIRE_AUTH=false`, `ALLOW_ANON=true`; Browser Run and image conversion remain protected.
-- Keep files under 300 lines without line-squeezing; split or rewrite by responsibility where needed.
-- Do not edit `AGENTS.md`, reset the database, use `git checkout`, or revert user changes without explicit confirmation.
-- `.git` is not usable in this sandbox; use `GIT_DIR=.git-local GIT_WORK_TREE=.` for git inspection.
-- Use `.git-local` for commit/push operations; `.dev-docs/context/` is untracked handoff material and should not be swept into the commit unless explicitly requested.
+- 2026-06-21 [CODE] Read `.dev-docs/converting-md-prd-split/00-index.md` before acting; focused docs for this change are `03a`, `05`, `07b`, `08`, `10`, and `11`.
+- 2026-06-21 [CODE] Current production/default public setup is unauthenticated address-bar conversion (`REQUIRE_AUTH=false`, `ALLOW_ANON=true`) with Browser Run globally enabled only when `DISABLE_BROWSER=false`.
+- 2026-06-21 [CODE] Explicit anonymous Browser Run remains blocked; automatic fallback may run only after auth/config gates and browser-ms budget reservation.
+- 2026-06-21 [CODE] Keep source files under 300 lines without line-squeezing; do not edit `AGENTS.md`, reset the database, use `git checkout`, or revert unrelated user changes.
+- 2026-06-21 [TOOL] Use `GIT_DIR=.git-local GIT_WORK_TREE=.` for git inspection in this repo.
+- 2026-06-21 [USER] User requested committing and pushing the Smartbox fallback fix so Dokploy can pick it up.
+- 2026-06-21 [ASSUMPTION] Production validation after Dokploy deploy is still pending; the release audit currently fails on dependency advisories.
 
 # Key decisions:
-- Add the detailed Cloudflare setup as a separate root-level guide rather than expanding the already concise README.
-- Keep redirect validation in `fetchWithLimits`; decorate successful route results with source URL frontmatter at the route boundary so cache hits and all methods share one external response contract.
-- Only infer `text/html` for bad/missing source content types when the body starts with an unmistakable HTML document signature; do not broadly accept generic binary/JSON responses.
-- For Cloudflare runtime manual redirect edge cases that produce empty, headerless responses, retry the same safe GET with runtime redirect following, then validate the final `response.url` before reading/converting; only safe `Accept` and `User-Agent` headers are sent.
-- AI source fetches use runtime redirect following directly, then validate the final `response.url`; native fetches retain the strict manual redirect path.
-- Source fetches use a browser-compatible user agent because EDC/CHEQ blocks the bare service user agent on intermediate redirect URLs.
+- 2026-06-21 [CODE] D001 ACTIVE: Keep explicit Browser Run permission (`allowBrowser`) separate from automatic fallback permission (`autoBrowserFallback`) in quota and reservation checks.
+- 2026-06-21 [CODE] D002 ACTIVE: Anonymous/default `mode=auto` conversions can use Browser Run fallback when globally enabled and budgeted, while explicit `mode=browser` remains forbidden without `allowBrowser`.
+- 2026-06-21 [CODE] D003 ACTIVE: Automatic fallback should render like a real page by upgrading the default `domcontentloaded` wait to `networkidle2` and allowing CSS; explicit Browser Run keeps caller-configured wait and asset blocking.
+- 2026-06-21 [CODE] D004 ACTIVE: Fallback is triggered by generic weak-source/output signals (`source_low_visible_text`, `source_script_heavy`, `source_cookie_shell`, output-too-short/frontmatter-dominant), not domain-specific rules.
 
 # State:
   - Done:
-    - User reported `https://converting.md/https://www.edc.dk/roenne` fails with `conversion_failed` because the source redirects to `https://www.edc.dk/ejendomsmaegler/roenne/bornholmerbo/`.
-    - Read relevant PRD docs `06a-url-security.md` and `08-routes-responses-errors.md`; PRD requires max 5 explicit redirects, each redirected URL validated, and successful responses include source URL headers.
-    - Confirmed `fetchWithLimits` already follows validated redirects with `redirect: "manual"` and existing unit coverage.
-    - Added `src/conversion/frontmatter.ts` to insert `url: {resolvedSourceUrl}` as the first YAML frontmatter field, replacing any existing top-level `url:` field in the frontmatter block.
-    - Applied frontmatter decoration in `src/routes/markdown.ts` before counters, event logging, and response generation.
-    - Added `test/route-redirect-frontmatter.test.ts` for the EDC-style redirect chain and final URL frontmatter.
-    - Updated route/cache/quota/mode tests for decorated markdown and output byte accounting.
-    - Verification passed: `npm run typecheck`, `npm test` (25 files, 95 tests), `npm run check:file-lines`, and `npm run verify:release`.
-    - Committed and pushed `2270cca` (`Add source URL frontmatter to markdown responses`) to `origin/main`.
-    - User tested live EDC URL again and still saw `conversion_failed` / `Source content type is not supported`.
-    - Confirmed production has the frontmatter commit live via `https://converting.md/https://example.com`, so the remaining issue is not deploy lag.
-    - Confirmed EDC returns valid HTML after redirects from curl, but production Worker still reaches unsupported content-type handling.
-    - Added guarded HTML body signature inference in `src/security/content-type.ts` and used it in `src/conversion/ai.ts`.
-    - Updated EDC redirect route regression to model a generic `application/octet-stream` final response with an HTML body.
-    - Added AI conversion tests for generic content type with clear HTML and non-HTML bodies.
-    - Verification passed: focused tests, `npm run typecheck`, `npm run check:file-lines`, and `npm run verify:release` (25 files, 97 tests).
-    - Committed and pushed `c6e4fba` (`Infer HTML for generic source content types`) to `origin/main`.
-    - Deployed `c6e4fba` to Cloudflare as Worker version `f4835c08-00fc-47a1-9a7b-8b627f9f8838`; exact `/roenne` URL still failed, while the final redirected URL converted successfully.
-    - Added a constrained runtime redirect fallback in `src/http/fetch-with-limits.ts` for empty, headerless manual responses, plus tests that validate final URLs and reject blocked final URLs.
-    - Verification passed: focused fetch/redirect tests, `npm run typecheck`, `npm run check:file-lines`, and `npm run verify:release` (25 files, 99 tests).
-    - Committed and pushed `13d4f68` (`Handle runtime-hidden redirect responses`) and deployed it as Worker version `b4a1b335-3470-477c-9184-6949729b27dd`; exact `/roenne` URL still failed.
-    - Switched AI source fetches to explicit runtime redirect following with final URL validation; focused tests pass and `npm run verify:release` passed with 25 files and 100 tests.
-    - Diagnosed production short URL failure as EDC CHEQ blocking the intermediate `/roenne/` URL for the bare service user agent: `status=403`, `Blocked by CHEQ`.
-    - Added `src/http/source-user-agent.ts` and switched native/AI source fetches to a browser-compatible user agent.
-    - Deployed the user-agent build as Worker version `d6d55451-9575-4bae-a524-c089f7b7dc12`; live smoke for `https://converting.md/https://www.edc.dk/roenne` returned 200 with canonical source URL and `url:` frontmatter.
-    - Verification passed after final change: `npm run verify:release` (25 files, 100 tests).
-    - Current turn: read `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, and `.dev-docs/converting-md-prd-split/00-index.md`.
-    - Handoff says README OSS readiness, MIT license, and `CLOUDFLARE_SETUP.md` work are complete, verified, committed, and pushed to `origin/main`.
-    - Loaded `CONTINUITY.md`, `.dev-docs/context/WORKING.md`, `.dev-docs/converting-md-prd-split/00-index.md`, and focused PRD docs `04` and `11`.
-    - Confirmed README is currently 299 lines, so updates need consolidation rather than append-only changes.
-    - Confirmed `.git-local` status shows `CONTINUITY.md` modified and `.dev-docs/context/` untracked.
-    - Rewrote `README.md` to lead with the public address-bar route, then document private API mode, setup, admin keys, deploy, production checks, verification, troubleshooting, and open-source notes.
-    - Kept `README.md` under the 300-line budget at 293 lines.
-    - Verification passed: `npm run check:file-lines`, `npm run check:prd-docs`, `npm run verify:release` (24 test files, 94 tests), and `npm run deploy:preflight`.
-    - User asked to choose a standard OSS license, commit, and push.
-    - Added `LICENSE` with MIT text, set `package.json`/lockfile license metadata to `MIT`, and updated README open-source notes.
-    - Verification passed after license changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, and README stayed under 300 lines at 292 lines.
-    - Committed and pushed `68edf60` (`Prepare README for open source release`) to `origin/main`.
-    - Read current README, `RELEASE_READINESS.md`, `wrangler.jsonc`, PRD deployment docs, and checked official Cloudflare docs for Wrangler deploy, D1, KV, Workers AI bindings, secrets, and custom domains.
-    - Added `CLOUDFLARE_SETUP.md` with a 12-step setup flow covering local preparation, auth mode, D1, KV, Workers AI binding, secrets, verification, remote migration, deploy, custom domain, production smoke tests, and operations.
-    - Linked `CLOUDFLARE_SETUP.md` from the README Cloudflare Setup section.
-    - Verification passed after guide changes: `npm run verify:release` (24 test files, 94 tests), `npm run deploy:preflight`, `npm run check:file-lines`, and `npm run check:prd-docs`.
-    - Committed and pushed `0d08fb6` (`Add Cloudflare setup guide`) to `origin/main`.
+    - 2026-06-21 [TOOL] Reproduced the Smartbox symptom: direct fetch returns a Salesforce/Aura shell with `Loading`, `Sorry to interrupt`, and `CSS Error`; browser rendering returns the Danish FAQ article.
+    - 2026-06-21 [TOOL] Live `converting.md` returned `x-converting-method: ai` plus weak-source/output warnings, proving the existing Browser Run fallback gate did not activate for public/default traffic.
+    - 2026-06-21 [CODE] Patched anonymous API-key config to permit automatic fallback budgets when Browser Run is globally enabled, while keeping explicit browser and image conversion disabled.
+    - 2026-06-21 [CODE] Patched Browser Run quota/reservation to accept an explicit-vs-fallback permission purpose.
+    - 2026-06-21 [CODE] Patched Browser Run fallback defaults to use `networkidle2` and avoid blocking CSS while preserving explicit Browser Run behavior.
+    - 2026-06-21 [CODE] Patched the orchestrator to enable fallback internally for eligible `mode=auto` requests before cache-key creation.
+    - 2026-06-21 [CODE] Added/updated regression tests for anonymous Smartbox-like fallback, fallback budget semantics, source-profile warnings, explicit anonymous Browser Run blocking, and guarded fallback behavior.
+    - 2026-06-21 [CODE] Updated README, release readiness, acceptance matrix, Cloudflare setup, and PRD docs to match the explicit-vs-fallback Browser Run policy.
+    - 2026-06-21 [TOOL] Verification passed: focused Vitest files, `npm run typecheck`, `npm run check`, `npm run deploy:dry-run`, `npm run smoke:health`, and `git diff --check`.
+    - 2026-06-21 [TOOL] `npm run verify:release` passed its check/env/PRD phases but failed at `npm audit` due existing dependency advisories in `esbuild`, `hono`, `undici`, `vite`, and `ws` dependency paths.
   - Now:
-    - Committing and pushing the already-deployed user-agent/source-fetch fix.
+    - 2026-06-21 [TOOL] Committing and pushing the local patch for Dokploy pickup.
   - Next:
-    - Report commit/deploy/live-smoke result.
+    - 2026-06-21 [TOOL] After Dokploy deploys the pushed commit, smoke-test the Smartbox URL on production.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- None.
+- 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether to run dependency updates such as `npm audit fix` before deploy; this may change lockfile and transitive versions.
+- 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether Dokploy will deploy despite the known `npm audit` failure; production smoke test is pending until it finishes.
 
 # Working set (files/ids/commands):
-- `README.md`
-- `CONTINUITY.md`
-- `.dev-docs/context/WORKING.md`
-- `.dev-docs/converting-md-prd-split/00-index.md`
-- `.dev-docs/converting-md-prd-split/04-cloudflare-config-deployment.md`
-- `.dev-docs/converting-md-prd-split/11-readme-ops-defaults.md`
-- `GIT_DIR=.git-local GIT_WORK_TREE=. git status --short`
-- `npm run verify:release`
-- `npm run deploy:preflight`
-- `LICENSE`
-- `package.json`
-- `package-lock.json`
-- Commit `68edf60`
-- `CLOUDFLARE_SETUP.md`
-- Commit `0d08fb6`
-- `src/security/url.ts`
-- `src/http/fetch-with-limits.ts`
-- `src/conversion/frontmatter.ts`
-- `src/routes/markdown.ts`
-- `test/route-redirect-frontmatter.test.ts`
-- `test/route-acceptance.test.ts`
-- `test/cache.test.ts`
-- `test/quota.test.ts`
-- `test/route-modes.test.ts`
-- `src/security/content-type.ts`
-- `src/conversion/ai.ts`
-- `test/conversion-edge.test.ts`
-- `test/fetch-limits.test.ts`
-- `src/conversion/native.ts`
-- `src/http/source-user-agent.ts`
+- 2026-06-21 [CODE] `src/auth/anonymous.ts`
+- 2026-06-21 [CODE] `src/middleware/auth.ts`
+- 2026-06-21 [CODE] `src/usage/quota.ts`
+- 2026-06-21 [CODE] `src/usage/reservations.ts`
+- 2026-06-21 [CODE] `src/conversion/browser.ts`
+- 2026-06-21 [CODE] `src/conversion/orchestrator.ts`
+- 2026-06-21 [CODE] `test/anonymous-browser-fallback.test.ts`
+- 2026-06-21 [CODE] `test/browser-budget.test.ts`
+- 2026-06-21 [CODE] `test/browser-fallback.test.ts`
+- 2026-06-21 [CODE] `test/route-acceptance.test.ts`
+- 2026-06-21 [CODE] `test/source-profile.test.ts`
+- 2026-06-21 [TOOL] `npm test -- test/source-profile.test.ts test/browser-budget.test.ts test/browser-fallback.test.ts test/anonymous-browser-fallback.test.ts test/route-acceptance.test.ts`
+- 2026-06-21 [TOOL] `npm run typecheck`
+- 2026-06-21 [TOOL] `npm run check`
+- 2026-06-21 [TOOL] `npm run verify:release` failed only at `npm audit`
+- 2026-06-21 [TOOL] `npm run deploy:dry-run`
+- 2026-06-21 [TOOL] `npm run smoke:health`
+- 2026-06-21 [TOOL] `GIT_DIR=.git-local GIT_WORK_TREE=. git diff --check`

@@ -52,7 +52,7 @@ Before a real deployment:
   `REQUIRE_AUTH=false` and `ALLOW_ANON=true`. Restore private mode by setting
   `REQUIRE_AUTH=true` and `ALLOW_ANON=false`.
 - Keep `DISABLE_IMAGE_CONVERSION=true` unless intentionally enabling image conversion.
-- Enable Browser Run only for trusted API keys with conservative browser-ms limits; automatic fallback still requires `browser.enabled=true`, `allowBrowser=true`, and `autoBrowserFallback=true`.
+- Enable Browser Run only with conservative browser-ms limits; explicit browser mode requires `allowBrowser=true`, while automatic fallback requires `autoBrowserFallback=true` and budget room.
 - Confirm `ADMIN_TOKEN` and `API_KEY_PEPPER` are strong random values.
 
 ## Deploy Sequence

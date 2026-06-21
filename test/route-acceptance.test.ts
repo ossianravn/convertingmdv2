@@ -146,7 +146,7 @@ describe("markdown route acceptance", () => {
     });
   });
 
-  it("keeps Browser Run disabled for anonymous traffic", async () => {
+  it("keeps explicit Browser Run disabled for anonymous traffic", async () => {
     const setup = anonymousSetup();
 
     const response = await app.fetch(

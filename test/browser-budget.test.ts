@@ -77,6 +77,20 @@ describe("browser budget reservations", () => {
     });
   });
 
+  it("uses rendered-page defaults for automatic fallback without explicit browser permission", async () => {
+    const d1 = createMemoryD1();
+    const fetchSpy = browserFetchSpy();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const result = await callBrowser(d1, { allowBrowser: false, autoBrowserFallback: true }, {}, "fallback");
+
+    const [, init] = firstFetchCall(fetchSpy);
+    const body = JSON.parse(String(init.body));
+    expect(result.method).toBe("browser");
+    expect(body.gotoOptions).toEqual({ waitUntil: "networkidle2", timeout: 10000 });
+    expect(body.rejectRequestPattern).toEqual(["/^.*\\.(png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf|mp4|webm|mp3)(\\?.*)?$/i"]);
+  });
+
   it("omits asset blocking and forwards explicit waitUntil, selector, and user agent when requested", async () => {
     const d1 = createMemoryD1();
     const fetchSpy = browserFetchSpy();
@@ -145,14 +159,15 @@ describe("browser budget reservations", () => {
 async function callBrowser(
   d1: ReturnType<typeof createMemoryD1>,
   apiKeyOverrides: Partial<ApiKey>,
-  browserOverrides: Partial<MarkdownRequest["browser"]> = {}
+  browserOverrides: Partial<MarkdownRequest["browser"]> = {},
+  purpose: "explicit" | "fallback" = "explicit"
 ) {
   const env = makeEnv({
     DB: d1.database,
     CLOUDFLARE_ACCOUNT_ID: "acct",
     CLOUDFLARE_BROWSER_API_TOKEN: "token"
   });
-  return tryBrowserMarkdown(env, markdownRequest(browserOverrides), apiKey(apiKeyOverrides), parseConfig(env), "req_test");
+  return tryBrowserMarkdown(env, markdownRequest(browserOverrides), apiKey(apiKeyOverrides), parseConfig(env), "req_test", purpose);
 }
 
 function markdownRequest(browserOverrides: Partial<MarkdownRequest["browser"]> = {}): MarkdownRequest {

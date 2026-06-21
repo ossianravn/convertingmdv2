@@ -24,7 +24,7 @@ export async function authenticateApiKey(c: Context<AppEnv>): Promise<ApiKey> {
   const rawApiKey = readApiKeyFromRequest(c.req.raw);
   if (!rawApiKey) {
     if (allowsAnonymousRequests(config)) {
-      return anonymousApiKey();
+      return anonymousApiKey(config);
     }
 
     throw new ConvertingError("missing_api_key", "Missing API key.", 401);

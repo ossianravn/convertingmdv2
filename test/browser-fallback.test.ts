@@ -13,7 +13,7 @@ afterEach(() => {
 });
 
 describe("guarded browser fallback", () => {
-  it("falls back to Browser Run for weak AI output from a JavaScript app shell", async () => {
+  it("falls back to Browser Run for weak AI output when the key permits automatic fallback", async () => {
     const d1 = createMemoryD1();
     const fetchSpy = vi
       .fn()
@@ -23,7 +23,7 @@ describe("guarded browser fallback", () => {
     vi.stubGlobal("fetch", fetchSpy);
 
     const result = await convertMarkdown(
-      markdownRequest({ browser: { enabled: true } }),
+      markdownRequest(),
       context(
         {
           DB: d1.database,
@@ -31,7 +31,7 @@ describe("guarded browser fallback", () => {
           CLOUDFLARE_ACCOUNT_ID: "acct",
           CLOUDFLARE_BROWSER_API_TOKEN: "token"
         },
-        browserKey()
+        fallbackKey()
       )
     );
 
@@ -59,7 +59,7 @@ describe("guarded browser fallback", () => {
           CLOUDFLARE_ACCOUNT_ID: "acct",
           CLOUDFLARE_BROWSER_API_TOKEN: "token"
         },
-        browserKey()
+        fallbackKey()
       )
     );
 
@@ -86,7 +86,7 @@ describe("guarded browser fallback", () => {
           CLOUDFLARE_ACCOUNT_ID: "acct",
           CLOUDFLARE_BROWSER_API_TOKEN: "token"
         },
-        browserKey()
+        fallbackKey()
       )
     );
 
@@ -169,8 +169,8 @@ function apiKey(overrides: Partial<ApiKey>): ApiKey {
   };
 }
 
-function browserKey(): Partial<ApiKey> {
-  return { allowBrowser: true, autoBrowserFallback: true };
+function fallbackKey(): Partial<ApiKey> {
+  return { allowBrowser: false, autoBrowserFallback: true };
 }
 
 function htmlResponse(html: string): Response {

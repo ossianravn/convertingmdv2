@@ -36,6 +36,23 @@ describe("HTML source profile", () => {
 
     expect(htmlSourceWarnings(html, "text/html")).not.toContain("source_js_app_shell");
   });
+
+  it("flags script-heavy loading shells as weak rendered sources", () => {
+    const html = encode(`
+      <!doctype html>
+      <html>
+        <body class="loading">
+          <div>Loading</div>
+          <div role="dialog">Sorry to interrupt CSS Error</div>
+          <script>${"window.__chunk='x';".repeat(900)}</script>
+        </body>
+      </html>
+    `);
+
+    expect(htmlSourceWarnings(html, "text/html; charset=utf-8")).toEqual(
+      expect.arrayContaining(["source_low_visible_text", "source_script_heavy"])
+    );
+  });
 });
 
 function encode(value: string): ArrayBuffer {

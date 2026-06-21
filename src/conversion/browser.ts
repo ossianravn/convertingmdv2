@@ -6,15 +6,18 @@ import type { Env } from "../types/env";
 import { byteLength } from "../utils/bytes";
 import type { ConversionResult } from "./result";
 
+export type BrowserConversionPurpose = "explicit" | "fallback";
+
 export async function tryBrowserMarkdown(
   env: Env,
   request: MarkdownRequest,
   apiKey: ApiKey,
   config: AppConfig,
-  requestId: string
+  requestId: string,
+  purpose: BrowserConversionPurpose = "explicit"
 ): Promise<ConversionResult> {
   const now = new Date();
-  const reservation = await reserveBrowserBudget(env, apiKey, config, now);
+  const reservation = await reserveBrowserBudget(env, apiKey, config, now, purpose);
   let committed = false;
 
   if (!env.CLOUDFLARE_ACCOUNT_ID || !env.CLOUDFLARE_BROWSER_API_TOKEN) {
@@ -29,7 +32,7 @@ export async function tryBrowserMarkdown(
         Authorization: `Bearer ${env.CLOUDFLARE_BROWSER_API_TOKEN}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(browserBody(request))
+      body: JSON.stringify(browserBody(request, purpose))
     });
 
     if (!response.ok) {
@@ -71,22 +74,29 @@ function browserEndpoint(accountId: string): string {
   return `https://api.cloudflare.com/client/v4/accounts/${accountId}/browser-rendering/markdown`;
 }
 
-function browserBody(request: MarkdownRequest): Record<string, unknown> {
+function browserBody(request: MarkdownRequest, purpose: BrowserConversionPurpose): Record<string, unknown> {
+  const waitUntil = fallbackWaitUntil(request, purpose);
   return {
     url: request.url,
     gotoOptions: {
-      waitUntil: request.browser.waitUntil,
+      waitUntil,
       timeout: 10000
     },
     ...(request.browser.waitForSelector
       ? { waitForSelector: { selector: request.browser.waitForSelector, timeout: 10000 } }
       : {}),
     ...(request.browser.userAgent ? { userAgent: request.browser.userAgent } : {}),
-    ...(request.browser.blockAssets ? { rejectRequestPattern: [assetBlockPattern()] } : {})
+    ...(request.browser.blockAssets ? { rejectRequestPattern: [assetBlockPattern(purpose)] } : {})
   };
 }
 
-function assetBlockPattern(): string {
+function fallbackWaitUntil(request: MarkdownRequest, purpose: BrowserConversionPurpose): MarkdownRequest["browser"]["waitUntil"] {
+  if (purpose !== "fallback") return request.browser.waitUntil;
+  return request.browser.waitUntil === "domcontentloaded" ? "networkidle2" : request.browser.waitUntil;
+}
+
+function assetBlockPattern(purpose: BrowserConversionPurpose): string {
+  if (purpose === "fallback") return "/^.*\\.(png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf|mp4|webm|mp3)(\\?.*)?$/i";
   return "/^.*\\.(css|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|otf|mp4|webm|mp3)(\\?.*)?$/i";
 }
 

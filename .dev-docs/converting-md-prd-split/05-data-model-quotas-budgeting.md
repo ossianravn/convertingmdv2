@@ -114,8 +114,8 @@ Before calling Browser Run:
 
 ```txt
 1. Confirm DISABLE_BROWSER=false.
-2. Confirm API key allow_browser=true.
-3. Confirm request mode/browser settings allow browser.
+2. Confirm API key allow_browser=true for explicit browser mode, or auto_browser_fallback=true for automatic fallback.
+3. Confirm request mode/browser settings allow browser when the request explicitly asks for browser mode.
 4. Confirm key browser-ms budget has room.
 5. Confirm global browser-ms budget has room.
 6. Reserve MAX_BROWSER_MS_PER_REQUEST against key and global counters.

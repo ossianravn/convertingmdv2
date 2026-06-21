@@ -7,7 +7,7 @@ export function allowsAnonymousRequests(config: AppConfig): boolean {
   return !config.requireAuth && config.allowAnon;
 }
 
-export function anonymousApiKey(): ApiKey {
+export function anonymousApiKey(config: AppConfig): ApiKey {
   return {
     id: anonymousApiKeyId,
     name: "Anonymous",
@@ -16,9 +16,9 @@ export function anonymousApiKey(): ApiKey {
     dailyRequestLimit: 100000,
     monthlyRequestLimit: 3000000,
     allowBrowser: false,
-    autoBrowserFallback: false,
-    dailyBrowserMsLimit: 0,
-    monthlyBrowserMsLimit: 0,
+    autoBrowserFallback: !config.disableBrowser,
+    dailyBrowserMsLimit: config.globalDailyBrowserMsLimit,
+    monthlyBrowserMsLimit: config.globalMonthlyBrowserMsLimit,
     allowImages: false,
     dailyImageLimit: 0,
     monthlyImageLimit: 0,
