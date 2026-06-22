@@ -13,6 +13,7 @@
 - 2026-06-21 [ASSUMPTION] Fix should be dependency/lockfile-only unless audit requires a source/config adjustment.
 - 2026-06-21 [USER] Live Smartbox URL still returns the Salesforce/Aura shell; user requested no guessing.
 - 2026-06-21 [USER] User requested migrating Browser Run from runtime REST token credentials to the Cloudflare `BROWSER` Worker binding.
+- 2026-06-22 [USER] User reported the Smartbox Memories URL still surfaces Salesforce/Aura shell text (`Loading`, `Sorry to interrupt`, `CSS Error`) ahead of the rendered FAQ article in production markdown.
 
 # Key decisions:
 - 2026-06-21 [CODE] D001 ACTIVE: Keep explicit Browser Run permission (`allowBrowser`) separate from automatic fallback permission (`autoBrowserFallback`) in quota and reservation checks.
@@ -41,10 +42,13 @@
     - 2026-06-21 [CODE] Migrated Browser Run adapter to `env.BROWSER.quickAction("markdown", ...)`, added `browser.binding = "BROWSER"` in `wrangler.jsonc`, removed runtime Browser REST credential requirements, and updated tests/docs/preflight checks.
     - 2026-06-21 [TOOL] `npm run verify:release` passed after binding migration: 27 test files / 106 tests, env hygiene, PRD docs, clean audit, Wrangler dry-run showing `env.BROWSER Browser Run`, and health smoke.
     - 2026-06-21 [TOOL] Committed and pushed Browser binding migration as `cd045a5` (`Use Browser Run binding for markdown fallback`) to `origin/main`.
+    - 2026-06-22 [TOOL] Reproduced current production Smartbox response: `x-converting-method: browser`, `x-converting-cache: HIT`, `browser_fallback_from_weak_ai`; output contains the real FAQ article but still starts with the Aura `Loading` / `Sorry to interrupt` / `CSS Error` shell.
+    - 2026-06-22 [CODE] Added a narrow markdown normalizer cleanup for Salesforce/Aura startup shells before rendered content, plus focused pure-normalizer and Browser Run fallback regressions.
+    - 2026-06-22 [TOOL] Verification passed: focused `npm test -- test/text-normalization.test.ts test/browser-fallback.test.ts`, `npm run check`, and full `npm run verify:release` with 27 test files / 108 tests, clean audit, Wrangler dry-run, and health smoke.
   - Now:
-    - 2026-06-21 [TOOL] Browser binding migration is on `origin/main` and ready for Dokploy to redeploy.
+    - 2026-06-22 [CODE] Aura shell cleanup fix is implemented and verified locally; pending commit/push/deploy to affect production.
   - Next:
-    - 2026-06-21 [TOOL] Verify production after Dokploy deploys `cd045a5`.
+    - 2026-06-22 [ASSUMPTION] Commit and push the fix, then verify production after Dokploy deploys.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether Dokploy's Docker warnings about secrets-as-ARG/ENV block deploy after audit is fixed; current log shows them as warnings, not the failing step.
@@ -72,3 +76,9 @@
 - 2026-06-21 [TOOL] `npm run deploy:dry-run`
 - 2026-06-21 [TOOL] `npm run smoke:health`
 - 2026-06-21 [TOOL] `GIT_DIR=.git-local GIT_WORK_TREE=. git diff --check`
+- 2026-06-22 [CODE] `src/conversion/text-normalization.ts`
+- 2026-06-22 [CODE] `test/text-normalization.test.ts`
+- 2026-06-22 [CODE] `test/browser-fallback.test.ts`
+- 2026-06-22 [TOOL] `npm test -- test/text-normalization.test.ts test/browser-fallback.test.ts`
+- 2026-06-22 [TOOL] `npm run check`
+- 2026-06-22 [TOOL] `npm run verify:release`

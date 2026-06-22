@@ -69,6 +69,34 @@ describe("guarded browser fallback", () => {
     expect(browserSpy).toHaveBeenCalledOnce();
   });
 
+  it("removes Salesforce Aura startup shell from Browser Run fallback markdown", async () => {
+    const d1 = createMemoryD1();
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce(htmlResponse(jsAppShell()))
+      .mockResolvedValueOnce(htmlResponse(jsAppShell()));
+    const browserSpy = vi.fn(async () => browserResponse(auraShellMarkdown()));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const result = await convertMarkdown(
+      markdownRequest(),
+      context(
+        {
+          DB: d1.database,
+          AI: { async toMarkdown() { return { markdown: weakMetadataMarkdown(), tokens: 124 }; } },
+          BROWSER: createBrowserRunStub(browserSpy)
+        },
+        fallbackKey()
+      )
+    );
+
+    expect(result.method).toBe("browser");
+    expect(result.markdown).toContain("Hvad er en Memories-gaveboks?");
+    expect(result.markdown).toContain("Mere end en gave");
+    expect(result.markdown).not.toContain("Sorry to interrupt");
+    expect(result.markdown).not.toContain("CSS Error");
+  });
+
   it("refreshes weak AI cache entries through Browser Run when the request and key allow it", async () => {
     const request = markdownRequest({ browser: { enabled: true } });
     const cacheKey = await createMarkdownCacheKey("https://example.com/page", request);
@@ -205,6 +233,28 @@ Decline Accept`;
 
 function renderedMarkdown(): string {
   return "# 90 days. Pick a problem worth solving.\n\nBuild a real business with AI. $2M in prizes. Ideate. Build. Ship. Grow.";
+}
+
+function auraShellMarkdown(): string {
+  return [
+    "---",
+    "url: https://faq.smartbox.com/FR/s/article/Hvad-er-en-Memories-gaveboks?language=da",
+    "---",
+    "",
+    "Loading",
+    "",
+    "[×](https://faq.smartbox.com/FR/s/article/Hvad-er-en-Memories-gaveboks?language=da# \"Cancel and close\")Sorry to interrupt",
+    "",
+    "CSS Error",
+    "",
+    "[Refresh](https://faq.smartbox.com/FR/s/article/Hvad-er-en-Memories-gaveboks?)",
+    "",
+    "## Hvad er en Memories-gaveboks?",
+    "",
+    "Svar",
+    "",
+    "Mere end en gave … Hver gaveboks fra Memories giver modtageren mulighed for at nyde en oplevelse."
+  ].join("\n");
 }
 
 function weakCachedAiResult(): ConversionResult {

@@ -16,7 +16,8 @@ export function normalizeConversionResult(result: ConversionResult, maxOutputByt
 
 export function normalizeMarkdownText(markdown: string): string {
   let fence: string | null = null;
-  const normalizedLines = normalizeLineEndings(stripBom(markdown)).split("\n").map((line) => {
+  const prepared = stripBrowserStartupShell(normalizeLineEndings(stripBom(markdown)));
+  const normalizedLines = prepared.split("\n").map((line) => {
     const marker = fenceMarker(line);
     if (fence) {
       if (marker?.startsWith(fence)) fence = null;
@@ -32,6 +33,58 @@ export function normalizeMarkdownText(markdown: string): string {
   });
 
   return normalizedLines.join("\n").normalize("NFC");
+}
+
+function stripBrowserStartupShell(markdown: string): string {
+  const lines = markdown.split("\n");
+  const shellStart = firstNonBlankLine(lines, bodyStartIndex(lines));
+  if (shellStart === -1 || !isLoadingShellLine(lines[shellStart])) return markdown;
+
+  const shellEnd = auraShellEndIndex(lines, shellStart);
+  if (shellEnd === -1) return markdown;
+
+  return [...lines.slice(0, shellStart), ...dropLeadingBlankLines(lines.slice(shellEnd + 1))].join("\n");
+}
+
+function bodyStartIndex(lines: string[]): number {
+  if (lines[0]?.trim() !== "---") return 0;
+  const end = lines.findIndex((line, index) => index > 0 && line.trim() === "---");
+  return end === -1 ? 0 : end + 1;
+}
+
+function firstNonBlankLine(lines: string[], start: number): number {
+  for (let index = start; index < lines.length; index += 1) {
+    if (lines[index]?.trim()) return index;
+  }
+  return -1;
+}
+
+function dropLeadingBlankLines(lines: string[]): string[] {
+  const first = firstNonBlankLine(lines, 0);
+  return first === -1 ? [] : lines.slice(first);
+}
+
+function isLoadingShellLine(line = ""): boolean {
+  return /^(loading|indlæser)$/i.test(line.trim());
+}
+
+function auraShellEndIndex(lines: string[], start: number): number {
+  const windowEnd = Math.min(lines.length, start + 16);
+  let sawInterrupt = false;
+  let sawCssError = false;
+
+  for (let index = start + 1; index < windowEnd; index += 1) {
+    const line = shellText(lines[index]);
+    if (line.includes("sorry to interrupt")) sawInterrupt = true;
+    if (sawInterrupt && line.includes("css error")) sawCssError = true;
+    if (sawCssError && line.includes("refresh")) return index;
+  }
+
+  return -1;
+}
+
+function shellText(line = ""): string {
+  return line.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
 function decodeOutsideInlineCode(line: string): string {

@@ -43,6 +43,40 @@ describe("Markdown text normalization", () => {
     ].join("\n"));
   });
 
+  it("removes hidden Salesforce Aura loading shell before rendered content", () => {
+    const input = [
+      "---",
+      "url: https://faq.smartbox.com/FR/s/article/Hvad-er-en-Memories-gaveboks?language=da",
+      "---",
+      "",
+      "Loading",
+      "",
+      "[×](https://faq.smartbox.com/FR/s/article/Hvad-er-en-Memories-gaveboks?language=da# \"Cancel and close\")Sorry to interrupt",
+      "",
+      "CSS Error",
+      "",
+      "[Refresh](https://faq.smartbox.com/FR/s/article/Hvad-er-en-Memories-gaveboks?)",
+      "",
+      "## Hvad er en Memories-gaveboks?",
+      "",
+      "Svar",
+      "",
+      "Mere end en gave … Hver gaveboks fra Memories giver modtageren mulighed for at nyde en oplevelse."
+    ].join("\n");
+
+    expect(normalizeMarkdownText(input)).toBe([
+      "---",
+      "url: https://faq.smartbox.com/FR/s/article/Hvad-er-en-Memories-gaveboks?language=da",
+      "---",
+      "",
+      "## Hvad er en Memories-gaveboks?",
+      "",
+      "Svar",
+      "",
+      "Mere end en gave … Hver gaveboks fra Memories giver modtageren mulighed for at nyde en oplevelse."
+    ].join("\n"));
+  });
+
   it("normalizes native, AI, browser, and cached conversion results", async () => {
     const expected = normalizedMarkdown();
 
