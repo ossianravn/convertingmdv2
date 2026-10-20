@@ -86,7 +86,8 @@
 [data-state="idle"] > .button-labels > [data-label="idle"],
 [data-state="busy"] > .button-labels > [data-label="busy"],
 [data-state="done"] > .button-labels > [data-label="done"],
-[data-state="failed"] > .button-labels > [data-label="failed"] {
+[data-state="failed"] > .button-labels > [data-label="failed"],
+[data-state="active"] > .button-labels > [data-label="active"] {
   visibility: visible;
 }
 

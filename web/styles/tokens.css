@@ -12,7 +12,7 @@
   --text-section: 1rem;
   --text-feature: 1.25rem;
   --text-lead: 1.0625rem;
-  --text-display: clamp(2rem, 1.35rem + 2.6vw, 3rem);
+  --text-display: clamp(1.75rem, 1.25rem + 1.6vw, 2.5rem);
   --leading-body: 1.5;
   --leading-heading: 1.375;
 
@@ -29,6 +29,8 @@
   --gap-group: var(--space-4);
   --gap-zone: var(--space-6);
   --gap-section: clamp(3rem, 6vw, 5rem);
+  /* The hero stays compact so the converter starts high on the first screen. */
+  --gap-hero: clamp(2rem, 3.5vw, 3rem);
   --inset-page: clamp(1rem, 3vw, 2rem);
   --inset-card: var(--space-4);
   --inset-row: var(--space-3);
@@ -38,7 +40,7 @@
   --control-height: 2.25rem;
   --control-height-lg: 2.5rem;
   --header-height: 4rem;
-  --content-width: 78rem;
+  --content-width: 90rem;
 
   --radius: 0.65rem;
   --radius-sm: calc(var(--radius) * 0.6);

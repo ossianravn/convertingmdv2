@@ -16,9 +16,17 @@ export function flashState(button: HTMLButtonElement, state: Exclude<ButtonState
   );
 }
 
-export async function copyText(button: HTMLButtonElement, text: string): Promise<boolean> {
+export function copyText(button: HTMLButtonElement, text: string): Promise<boolean> {
+  return copyWith(button, () => navigator.clipboard.writeText(text));
+}
+
+export function copyItem(button: HTMLButtonElement, item: () => ClipboardItem): Promise<boolean> {
+  return copyWith(button, () => navigator.clipboard.write([item()]));
+}
+
+async function copyWith(button: HTMLButtonElement, write: () => Promise<void>): Promise<boolean> {
   try {
-    await navigator.clipboard.writeText(text);
+    await write();
     flashState(button, "done");
     return true;
   } catch (error) {

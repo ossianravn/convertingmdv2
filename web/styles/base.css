@@ -60,6 +60,11 @@ svg {
   outline-offset: 2px;
 }
 
+/* Components set display; hidden must still win. */
+[hidden] {
+  display: none !important;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

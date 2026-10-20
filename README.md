@@ -119,7 +119,8 @@ token, browser-ms, and warning headers where applicable.
 
 Browsers that open `https://converting.md/` get a small web app: a URL field
 that opens `converting.md/{url}`, and a Markdown-to-HTML converter with live
-preview, Copy HTML and Download. API clients that do not ask for `text/html`
+preview, full screen, Copy formatted (rich text for Word, Docs and email), Copy
+HTML and Download. API clients that do not ask for `text/html`
 still get the JSON route list from `GET /`.
 
 The page lives in `web/` (plain HTML, CSS and TypeScript, Markdown parsed by

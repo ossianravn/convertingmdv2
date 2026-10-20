@@ -35,7 +35,7 @@
 }
 
 .hero {
-  padding-top: var(--gap-section);
+  padding-top: var(--gap-hero);
 }
 
 .hero h1 {
@@ -117,6 +117,10 @@
 
 .section {
   padding-top: var(--gap-section);
+}
+
+.converter-section {
+  padding-top: var(--gap-hero);
 }
 
 .section-title {

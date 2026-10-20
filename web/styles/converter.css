@@ -1,3 +1,19 @@
+.converter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-control);
+}
+
+/* A quiet button at the edge puts its label on the edge (Groundwork). */
+.fullscreen-toggle {
+  margin-right: -0.625rem;
+}
+
+.fullscreen-toggle .button-labels > * {
+  justify-content: end;
+}
+
 .converter {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -7,7 +23,8 @@
 .pane {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  height: clamp(28rem, 72svh, 46rem);
+  /* At the top of the page the panes end just above the fold (they start ~21.5rem down). */
+  height: clamp(28rem, calc(100svh - 23rem), 56rem);
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -93,7 +110,8 @@
 }
 
 /* A narrow pane keeps both actions; their labels move to the accessible name. */
-@container pane (width < 27rem) {
+/* The labelled header needs ~35rem; below that the actions show icons only. */
+@container pane (width < 36rem) {
   .pane-actions .button {
     width: var(--control-height-sm);
     padding: 0;
@@ -107,6 +125,25 @@
     clip: rect(0 0 0 0);
     white-space: nowrap;
   }
+}
+
+/* Full screen: the heading row stays, and the panes share the rest. */
+.converter-section:fullscreen {
+  display: flex;
+  flex-direction: column;
+  padding-block: var(--gap-zone);
+  overflow: auto;
+  background: var(--background);
+}
+
+.converter-section:fullscreen .converter {
+  flex: 1;
+  min-height: 0;
+  grid-auto-rows: minmax(0, 1fr);
+}
+
+.converter-section:fullscreen .pane {
+  height: auto;
 }
 
 @media (width < 52rem) {

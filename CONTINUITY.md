@@ -23,10 +23,15 @@
     - 2026-10-20 [CODE] Frontpage built: `web/` (HTML, CSS on Groundwork tokens, TS modules), `scripts/build-web.ts`, `src/routes/home.ts` (Accept negotiation + CSP), `ASSETS` binding, deploy preflight checks for assets/build, Windows path fix in file-line check, docs (README, PRD 04/08, acceptance matrix).
     - 2026-10-20 [TOOL] Verified: `npm run check` (30 files / 136 tests), PRD + env checks, audit 0, `wrangler deploy --dry-run` (runs custom build, 4 assets), `wrangler dev --local` health OK; Playwright/Chrome at 1440/1024/390 in light+dark: no overflow, no app console errors; typing, tabs (keyboard), copy, download filename, URL validation/redirect, sandboxed preview blocks scripts and javascript: links.
     - 2026-10-20 [TOOL] `npm run smoke:health` cannot spawn `npm.cmd` on Windows (pre-existing, Linux CI unaffected); equivalent manual `wrangler dev --local` + `/healthz` passed.
+    - 2026-10-20 [TOOL] Committed `9b3fb58` and pushed to `origin/main`. GitHub Actions `verify:release` passed (incl. Linux health smoke). Dokploy build succeeded; container deploy ran `build:web`, uploaded 4 assets, Worker version `3d751df1-4da2-4877-8938-5ab90907d801`.
+    - 2026-10-20 [TOOL] Production verified: browser Accept -> frontpage with CSP/Vary/request id; `curl https://converting.md/` -> JSON; assets 200; `/healthz` ok; `/https://example.com/` converts (method ai); Playwright on production at 1440 light and 390 dark: no overflow, no console errors; URL form redirect converts example.com.
+    - 2026-10-20 [CODE] Converter prominence: hero spacing `--gap-hero`, headline max 40px, page width 90rem, panes `calc(100svh - 23rem)` (at 2030x1019: top 417->350, width 1184->1376, bottom above the fold).
+    - 2026-10-20 [USER] Added full screen for the converter (Fullscreen API on `#markdown-to-html`, hidden where unsupported) and "Copy formatted" (ClipboardItem with inline-styled text/html + readable text/plain); Copy HTML now uses a code icon; pane actions go icon-only below a 36rem pane.
+    - 2026-10-20 [TOOL] Verified locally in Chrome: full screen enter/exit, clipboard flavours, header fits at 2030/1440/1280 (labels) and 1024/390 (icons), no overflow.
   - Now:
-    - 2026-10-20 [USER] Approved commit + push. Committing the frontpage (excluding the user's `AGENTS.md` change) and pushing to `origin/main`.
+    - 2026-10-20 [USER] Approved commit + push of these changes.
   - Next:
-    - 2026-10-20 [TOOL] Watch the Dokploy redeploy on `kpi-v2-panel` (container `convertingmd-app-*`; start cmd runs D1 migrations then `wrangler deploy`), then verify `https://converting.md/` in a browser and that `curl https://converting.md/` still returns JSON.
+    - 2026-10-20 [TOOL] Watch Dokploy deploy (log ends with "Nixpacks build completed"; deploy output is in the container logs), then verify production.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
 - 2026-10-20 [TOOL] CONFIRMED: Dokploy (Nixpacks, Node 22.12.0) on `kpi-v2-panel` (ssh alias, Codex key): install `npm run install:deploy-runner`; build `npm run check && check:env-hygiene && check:prd-docs && npm audit && deploy:preflight`; start runs `wrangler d1 migrations apply --remote` then `wrangler deploy --secrets-file`, so `build:web` runs at container start. All locked packages support Node 22.12.

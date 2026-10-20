@@ -1,15 +1,17 @@
 import { announce, requireElement } from "./dom";
+import { formattedClipboardItem } from "./formatted-copy";
 import { downloadFileName, standaloneDocument } from "./html-document";
 import { renderMarkdown, type RenderedMarkdown } from "./markdown";
 import { mountOutputTabs, type OutputView } from "./output-tabs";
 import { mountPreviewFrame } from "./preview-frame";
 import { createRenderScheduler } from "./render-scheduler";
-import { copyText } from "./stateful-button";
+import { copyItem, copyText } from "./stateful-button";
 
 export function mountConverter(root: HTMLElement, documentCss: string, status: HTMLElement): void {
   const editor = requireElement(root, "#markdown-input", HTMLTextAreaElement);
   const htmlOutput = requireElement(root, "#html-output", HTMLElement);
-  const copyButton = requireElement(root, "#copy-html", HTMLButtonElement);
+  const copyFormattedButton = requireElement(root, "#copy-formatted", HTMLButtonElement);
+  const copyHtmlButton = requireElement(root, "#copy-html", HTMLButtonElement);
   const downloadButton = requireElement(root, "#download-html", HTMLButtonElement);
   const preview = mountPreviewFrame(requireElement(root, "#preview-frame", HTMLIFrameElement), documentCss);
 
@@ -32,9 +34,14 @@ export function mountConverter(root: HTMLElement, documentCss: string, status: H
     show();
   });
 
-  copyButton.addEventListener("click", async () => {
+  copyFormattedButton.addEventListener("click", async () => {
     scheduler.flush();
-    const copied = await copyText(copyButton, rendered.html);
+    const copied = await copyItem(copyFormattedButton, () => formattedClipboardItem(rendered.html));
+    announce(status, copied ? "Formatted text copied" : "Couldn't copy the formatted text");
+  });
+  copyHtmlButton.addEventListener("click", async () => {
+    scheduler.flush();
+    const copied = await copyText(copyHtmlButton, rendered.html);
     announce(status, copied ? "HTML copied" : "Couldn't copy the HTML");
   });
   downloadButton.addEventListener("click", () => {
