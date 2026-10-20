@@ -88,6 +88,7 @@ Evidence:
 Covered criteria:
 
 - `POST /v1/markdown`, `GET /v1/markdown?url=`, and `GET /https://example.com` are covered.
+- `GET /` serves the frontpage to `Accept: text/html` with CSP and keeps JSON for other clients (`test/home.test.ts`).
 - Missing auth is rejected on conversion routes.
 - Markdown and JSON formats are covered.
 - Response metadata covers request ID, method, cache, source URL/content type, output bytes, and rate-limit headers.

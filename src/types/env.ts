@@ -31,6 +31,7 @@ export interface AiBinding {
 
 export interface Env {
   AI: AiBinding;
+  ASSETS: Fetcher;
   BROWSER?: BrowserRun;
   DB: D1Database;
   CACHE_KV: KVNamespace;

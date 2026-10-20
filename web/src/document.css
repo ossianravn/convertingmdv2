@@ -1,0 +1,150 @@
+:root {
+  color-scheme: light dark;
+  --text: oklch(0.23 0.012 270);
+  --muted: oklch(0.49 0.014 270);
+  --border: oklch(0.916 0.006 270);
+  --surface: oklch(0.963 0.003 270);
+  --link: oklch(0.51 0.195 278);
+  --page: oklch(1 0 0);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: oklch(0.93 0.005 270);
+    --muted: oklch(0.72 0.012 270);
+    --border: oklch(0.305 0.012 270);
+    --surface: oklch(0.25 0.012 270);
+    --link: oklch(0.76 0.12 278);
+    --page: oklch(0.18 0.006 270);
+  }
+}
+
+html {
+  background: var(--page);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+  font: 1rem/1.65 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 48rem) {
+  body {
+    padding-block: 3rem 4rem;
+  }
+}
+
+body > :first-child {
+  margin-top: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 1.75em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+h1 { font-size: 2em; letter-spacing: -0.022em; }
+h2 { font-size: 1.5em; letter-spacing: -0.014em; }
+h3 { font-size: 1.25em; }
+h4 { font-size: 1em; }
+h5 { font-size: 0.875em; }
+h6 { font-size: 0.875em; color: var(--muted); }
+
+p, ul, ol, dl, blockquote, pre, table, figure {
+  margin: 0 0 1em;
+}
+
+a {
+  color: var(--link);
+  text-underline-offset: 0.15em;
+}
+
+ul, ol {
+  padding-left: 1.5em;
+}
+
+li + li,
+li > ul,
+li > ol {
+  margin-top: 0.25em;
+}
+
+li > ul,
+li > ol {
+  margin-bottom: 0;
+}
+
+li > input[type="checkbox"] {
+  margin: 0 0.4em 0 0;
+  vertical-align: -0.1em;
+}
+
+blockquote {
+  padding: 0 1em;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+
+code, kbd, samp, pre {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.875em;
+}
+
+:not(pre) > code {
+  padding: 0.15em 0.35em;
+  border-radius: 0.25rem;
+  background: var(--surface);
+}
+
+pre {
+  overflow-x: auto;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--surface);
+  line-height: 1.5;
+}
+
+pre code {
+  font-size: inherit;
+}
+
+table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 0.4em 0.75em;
+  border: 1px solid var(--border);
+}
+
+th {
+  background: var(--surface);
+  font-weight: 600;
+}
+
+th:not([align]),
+td:not([align]) {
+  text-align: left;
+}
+
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+hr {
+  margin: 2em 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}

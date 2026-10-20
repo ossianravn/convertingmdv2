@@ -17,6 +17,7 @@ export type ErrorCode =
   | "global_image_budget_exceeded"
   | "cache_error"
   | "cloudflare_api_error"
+  | "internal_error"
   | "not_found";
 
 export type ConversionMode = "auto" | "native" | "ai" | "browser";

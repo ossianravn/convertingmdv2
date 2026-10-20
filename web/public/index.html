@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>converting.md: web pages to Markdown, Markdown to HTML</title>
+  <meta name="description" content="Turn any web page into clean Markdown by putting converting.md/ in front of its address, or convert Markdown to HTML with a live preview. Free and open source.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111215" media="(prefers-color-scheme: dark)">
+  <meta property="og:title" content="converting.md">
+  <meta property="og:description" content="Web pages to Markdown, Markdown to HTML.">
+  <link rel="canonical" href="https://converting.md/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/app.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <svg class="icon-sprite" aria-hidden="true">
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+  </svg>
+
+  <header class="site-header">
+    <div class="container site-header-row">
+      <a class="wordmark" href="/">converting<span>.md</span></a>
+      <nav class="site-nav" aria-label="Main">
+        <a class="button button-ghost" href="#api">API</a>
+        <a class="button button-ghost" href="#syntax">Syntax</a>
+        <a class="button button-ghost button-icon" href="https://github.com/ossianravn/convertingmdv2" aria-label="Source on GitHub">
+          <svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="container hero" aria-labelledby="page-title">
+      <h1 id="page-title">Turn any web page into Markdown</h1>
+      <p class="lead">Add <code class="inline-code">converting.md/</code> before any link in your address bar, or paste the link here.</p>
+      <form class="url-form" id="url-form" action="/v1/markdown" method="get" novalidate>
+        <label class="url-field">
+          <span class="url-prefix" aria-hidden="true">converting.md/</span>
+          <span class="sr-only">Web page address</span>
+          <input name="url" type="url" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://example.com/article" aria-describedby="url-error">
+        </label>
+        <button class="button button-primary button-lg" type="submit" data-state="idle">
+          <span class="button-labels">
+            <span data-label="idle">Convert<svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+            <span data-label="busy">Convert<span class="spinner" aria-hidden="true"></span></span>
+          </span>
+        </button>
+        <p class="field-error" id="url-error" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <section class="container section" id="markdown-to-html" aria-labelledby="converter-title">
+      <h2 class="section-title" id="converter-title">Markdown to HTML</h2>
+      <div class="section-body converter" id="converter">
+        <div class="pane">
+          <div class="pane-header">
+            <label class="pane-title" for="markdown-input">Markdown</label>
+          </div>
+          <textarea class="editor" id="markdown-input" spellcheck="false" autocapitalize="off">
+# Release notes
+
+Version **2.4** makes exports faster and adds *dark mode*. Read the [full changelog](https://github.com/ossianravn/convertingmdv2) for details.
+
+## Highlights
+
+- Exports finish in half the time
+- Tables keep their column alignment
+- ~~Manual refresh~~ Automatic sync
+
+## Upgrade
+
+```sh
+npm install example@2.4
+```
+
+> Back up your settings before you upgrade.
+
+| Plan | Exports   | Price |
+| ---- | :-------: | ----: |
+| Free | 10        | $0    |
+| Pro  | Unlimited | $8    |
+
+- [x] Update the docs
+- [ ] Announce the release
+</textarea>
+        </div>
+
+        <div class="pane pane-output">
+          <div class="pane-header">
+            <div class="segmented" role="tablist" aria-label="Output">
+              <button type="button" role="tab" id="tab-preview" data-view="preview" aria-selected="true" aria-controls="panel-preview">Preview</button>
+              <button type="button" role="tab" id="tab-html" data-view="html" aria-selected="false" aria-controls="panel-html" tabindex="-1">HTML</button>
+            </div>
+            <div class="pane-actions">
+              <button class="button button-outline button-sm" type="button" id="copy-html" data-state="idle">
+                <span class="button-labels">
+                  <span data-label="idle"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span class="button-text">Copy HTML</span></span>
+                  <span data-label="done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span class="button-text">Copied</span></span>
+                  <span data-label="failed"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span class="button-text">Copy failed</span></span>
+                </span>
+              </button>
+              <button class="button button-outline button-sm" type="button" id="download-html">
+                <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span class="button-text">Download</span>
+              </button>
+            </div>
+          </div>
+          <div class="pane-body">
+            <div class="pane-panel" role="tabpanel" id="panel-preview" aria-labelledby="tab-preview">
+              <iframe class="preview-frame" id="preview-frame" title="Preview" sandbox="allow-same-origin"></iframe>
+            </div>
+            <div class="pane-panel" role="tabpanel" id="panel-html" aria-labelledby="tab-html" hidden>
+              <pre class="html-output" tabindex="0"><code id="html-output"></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container section" id="api" aria-labelledby="api-title">
+      <h2 class="section-title" id="api-title">API</h2>
+      <p class="section-lead">The same conversion works from scripts, agents and the command line.</p>
+      <div class="section-body examples">
+        <div>
+          <h3 class="example-title">Address bar</h3>
+          <div class="code-block">
+            <pre><code id="example-address">https://converting.md/https://example.com/article</code></pre>
+            <button class="button button-ghost button-icon button-xs" type="button" data-copy="example-address" data-state="idle" aria-label="Copy address">
+              <span class="button-labels">
+                <span data-label="idle"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg></span>
+                <span data-label="done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+                <span data-label="failed"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg></span>
+              </span>
+            </button>
+          </div>
+        </div>
+        <div>
+          <h3 class="example-title">GET</h3>
+          <div class="code-block">
+            <pre><code id="example-get">curl "https://converting.md/v1/markdown?url=https%3A%2F%2Fexample.com%2Farticle"</code></pre>
+            <button class="button button-ghost button-icon button-xs" type="button" data-copy="example-get" data-state="idle" aria-label="Copy GET command">
+              <span class="button-labels">
+                <span data-label="idle"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg></span>
+                <span data-label="done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+                <span data-label="failed"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg></span>
+              </span>
+            </button>
+          </div>
+        </div>
+        <div>
+          <h3 class="example-title">POST with JSON output</h3>
+          <div class="code-block">
+            <pre><code id="example-post">curl -X POST "https://converting.md/v1/markdown" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/article", "format": "json"}'</code></pre>
+            <button class="button button-ghost button-icon button-xs" type="button" data-copy="example-post" data-state="idle" aria-label="Copy POST command">
+              <span class="button-labels">
+                <span data-label="idle"><svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg></span>
+                <span data-label="done"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+                <span data-label="failed"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg></span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <a class="reference-link" href="https://github.com/ossianravn/convertingmdv2#api-usage">API reference<svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></a>
+    </section>
+
+    <section class="container section" id="syntax" aria-labelledby="syntax-title">
+      <h2 class="section-title" id="syntax-title">Markdown syntax</h2>
+      <div class="section-body syntax-grid">
+        <table class="syntax-table">
+          <caption>Text</caption>
+          <thead><tr><th scope="col">Element</th><th scope="col">Markdown</th></tr></thead>
+          <tbody>
+            <tr><td>Heading</td><td><code># Title</code> to <code>###### Title</code></td></tr>
+            <tr><td>Bold</td><td><code>**bold**</code></td></tr>
+            <tr><td>Italic</td><td><code>*italic*</code></td></tr>
+            <tr><td>Strikethrough</td><td><code>~~done~~</code></td></tr>
+            <tr><td>Inline code</td><td><code>`code`</code></td></tr>
+            <tr><td>Link</td><td><code>[title](https://example.com)</code></td></tr>
+            <tr><td>Image</td><td><code>![alt text](image.png)</code></td></tr>
+          </tbody>
+        </table>
+        <table class="syntax-table">
+          <caption>Blocks</caption>
+          <thead><tr><th scope="col">Element</th><th scope="col">Markdown</th></tr></thead>
+          <tbody>
+            <tr><td>Bulleted list</td><td><pre>- First
+- Second</pre></td></tr>
+            <tr><td>Numbered list</td><td><pre>1. First
+2. Second</pre></td></tr>
+            <tr><td>Task list</td><td><pre>- [x] Done
+- [ ] To do</pre></td></tr>
+            <tr><td>Blockquote</td><td><code>&gt; Quoted text</code></td></tr>
+            <tr><td>Code block</td><td><pre>```js
+const answer = 42;
+```</pre></td></tr>
+            <tr><td>Table</td><td><pre>| Name | Role |
+| ---- | ---- |
+| Ada  | Lead |</pre></td></tr>
+            <tr><td>Horizontal rule</td><td><code>---</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer-row">
+      <p>converting.md is open source under the <a href="https://github.com/ossianravn/convertingmdv2/blob/main/LICENSE">MIT License</a>.</p>
+      <a href="https://github.com/ossianravn/convertingmdv2">Source on GitHub</a>
+    </div>
+  </footer>
+
+  <div class="sr-only" id="page-status" aria-live="polite"></div>
+</body>
+</html>

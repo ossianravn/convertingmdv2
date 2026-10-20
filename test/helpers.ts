@@ -7,6 +7,7 @@ export function makeEnv(overrides: Partial<Env> = {}): Env {
         return { markdown: "# Mock" };
       }
     },
+    ASSETS: createAssetsStub(),
     BROWSER: createBrowserRunStub(),
     DB: createD1Stub(),
     CACHE_KV: createKvStub(),
@@ -25,6 +26,21 @@ export function makeEnv(overrides: Partial<Env> = {}): Env {
     GLOBAL_MONTHLY_IMAGE_LIMIT: "500",
     ...overrides
   };
+}
+
+export const frontpageHtml = "<!doctype html><title>converting.md</title>";
+
+export function createAssetsStub(fetch: (request: Request) => Promise<Response> = serveFrontpage): Fetcher {
+  return {
+    fetch(input: RequestInfo | URL, init?: RequestInit) {
+      return fetch(new Request(input, init));
+    }
+  } as unknown as Fetcher;
+}
+
+async function serveFrontpage(request: Request): Promise<Response> {
+  if (new URL(request.url).pathname !== "/index.html") return new Response("Not found", { status: 404 });
+  return new Response(frontpageHtml, { headers: { "Content-Type": "text/html; charset=utf-8", ETag: '"home"' } });
 }
 
 export function createBrowserRunStub(

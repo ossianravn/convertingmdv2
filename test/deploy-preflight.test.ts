@@ -40,6 +40,16 @@ describe("deploy config preflight", () => {
     expect(findDeployConfigIssues(config)).toEqual([{ path: "browser", message: "BROWSER binding is required." }]);
   });
 
+  it("requires the frontpage assets to be built and routed through the Worker", () => {
+    const config = { ...validConfig({}), assets: { binding: "ASSETS", directory: "./dist/web", html_handling: "auto-trailing-slash" } };
+    const { build: _build, ...withoutBuild } = config;
+
+    expect(findDeployConfigIssues(withoutBuild)).toEqual([
+      { path: "assets.html_handling", message: 'assets.html_handling must be "none".' },
+      { path: "build.command", message: 'build.command must be "npm run build:web".' }
+    ]);
+  });
+
   it("accepts real resource IDs and safe production vars", () => {
     expect(findDeployConfigIssues(validConfig({}))).toEqual([]);
   });
@@ -69,6 +79,8 @@ interface ConfigOverrides {
 function validConfig(overrides: ConfigOverrides) {
   return {
     browser: { binding: "BROWSER" },
+    build: { command: "npm run build:web" },
+    assets: { binding: "ASSETS", directory: "./dist/web", html_handling: "none" },
     d1_databases: [{ binding: "DB", database_id: overrides.d1Id ?? "d1-real-id" }],
     kv_namespaces: [{ binding: "CACHE_KV", id: overrides.kvId ?? "kv-real-id" }],
     vars: overrides.vars ?? {

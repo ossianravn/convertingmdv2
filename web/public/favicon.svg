@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    rect { fill: #1f2024; }
+    path { fill: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      rect { fill: #f1f1f3; }
+      path { fill: #1f2024; }
+    }
+  </style>
+  <rect width="32" height="32" rx="7"/>
+  <path transform="translate(-0.65 6.08) scale(0.155)" d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39zm125 0l-30-33h20V30h20v35h20z"/>
+</svg>

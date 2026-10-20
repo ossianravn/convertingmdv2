@@ -7,6 +7,7 @@ import { requestIdMiddleware } from "./middleware/request-id";
 import { registerAdminRoutes } from "./routes/admin";
 import { registerCatchallRoutes } from "./routes/catchall";
 import { registerHealthRoutes } from "./routes/health";
+import { registerHomeRoutes } from "./routes/home";
 import { registerMarkdownRoutes } from "./routes/markdown";
 import type { AppEnv } from "./types/env";
 
@@ -17,6 +18,7 @@ export function createApp(): Hono<AppEnv> {
   app.use("*", rejectQueryStringAuth);
   app.onError(handleError);
 
+  registerHomeRoutes(app);
   registerHealthRoutes(app);
   registerMarkdownRoutes(app);
   registerAdminRoutes(app);

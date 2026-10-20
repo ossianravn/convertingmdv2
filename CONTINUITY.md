@@ -1,84 +1,36 @@
 # Goal (incl. success criteria):
-- 2026-06-21 [USER] Unblock Dokploy deployment for the pushed Smartbox Browser Run fallback fix.
-- 2026-06-21 [ASSUMPTION] Success means `npm audit` no longer fails in the Docker build, release checks pass locally, and the dependency fix is committed/pushed to `origin/main`.
+- 2026-10-20 [USER] Replace the JSON response at `https://converting.md/` with an open frontpage: a Markdown-to-HTML converter like markdowntohtml.com (modern, clean, no slop) plus a URL input that sends the user to `converting.md/{url}`.
+- 2026-10-20 [ASSUMPTION] Success: browsers get the HTML page at `/`; API clients (`Accept` without `text/html`) still get the JSON route list; live preview, Preview/HTML views, Copy HTML, Download .html, URL redirect; light/dark; wide and narrow layouts reviewed in a real browser; `npm run verify:release` passes.
 
 # Constraints/Assumptions:
-- 2026-06-21 [CODE] Read `.dev-docs/converting-md-prd-split/00-index.md` before acting; focused docs for this change are `03a`, `05`, `07b`, `08`, `10`, and `11`.
-- 2026-06-21 [CODE] Current production/default public setup is unauthenticated address-bar conversion (`REQUIRE_AUTH=false`, `ALLOW_ANON=true`) with Browser Run globally enabled only when `DISABLE_BROWSER=false`.
-- 2026-06-21 [CODE] Explicit anonymous Browser Run remains blocked; automatic fallback may run only after auth/config gates and browser-ms budget reservation.
-- 2026-06-21 [CODE] Keep source files under 300 lines without line-squeezing; do not edit `AGENTS.md`, reset the database, use `git checkout`, or revert unrelated user changes.
-- 2026-06-21 [TOOL] Use `GIT_DIR=.git-local GIT_WORK_TREE=.` for git inspection in this repo.
-- 2026-06-21 [USER] User requested committing and pushing the Smartbox fallback fix so Dokploy can pick it up.
-- 2026-06-21 [USER] Dokploy build failed at `npm --cache /tmp/npm-cache audit` with advisories in `undici`, `vite`, and `ws` dependency paths.
-- 2026-06-21 [ASSUMPTION] Fix should be dependency/lockfile-only unless audit requires a source/config adjustment.
-- 2026-06-21 [USER] Live Smartbox URL still returns the Salesforce/Aura shell; user requested no guessing.
-- 2026-06-21 [USER] User requested migrating Browser Run from runtime REST token credentials to the Cloudflare `BROWSER` Worker binding.
-- 2026-06-22 [USER] User reported the Smartbox Memories URL still surfaces Salesforce/Aura shell text (`Loading`, `Sorry to interrupt`, `CSS Error`) ahead of the rendered FAQ article in production markdown.
+- 2026-06-21 [CODE] Read `.dev-docs/converting-md-prd-split/00-index.md` first; routing work touches `03a`, `08`, `10`; deploy/docs touch `04`, `11`. PRD files stay under 220 lines and `manifest.json` line counts must match.
+- 2026-06-21 [CODE] Source files under 300 lines without line-squeezing; split by responsibility. No empty catch blocks, no dev fallbacks.
+- 2026-06-21 [CODE] Do not edit `AGENTS.md` (user has an uncommitted change there), reset the database, or revert unrelated user changes.
+- 2026-10-20 [CODE] Deploy path: Dokploy (Nixpacks) pulls `main` from GitHub and runs Wrangler; pushing to `main` deploys production, so push only with user approval.
+- 2026-10-20 [USER] UI bar: user's global ui-design rules (controls sized to content, Groundwork tokens/patterns, look before reporting at wide/narrow, light/dark).
+- 2026-10-20 [TOOL] Plain `git` works in this checkout (`.git`); the old `.git-local` note no longer applies.
 
 # Key decisions:
-- 2026-06-21 [CODE] D001 ACTIVE: Keep explicit Browser Run permission (`allowBrowser`) separate from automatic fallback permission (`autoBrowserFallback`) in quota and reservation checks.
-- 2026-06-21 [CODE] D002 ACTIVE: Anonymous/default `mode=auto` conversions can use Browser Run fallback when globally enabled and budgeted, while explicit `mode=browser` remains forbidden without `allowBrowser`.
-- 2026-06-21 [CODE] D003 ACTIVE: Automatic fallback should render like a real page by upgrading the default `domcontentloaded` wait to `networkidle2` and allowing CSS; explicit Browser Run keeps caller-configured wait and asset blocking.
-- 2026-06-21 [CODE] D004 ACTIVE: Fallback is triggered by generic weak-source/output signals (`source_low_visible_text`, `source_script_heavy`, `source_cookie_shell`, output-too-short/frontmatter-dominant), not domain-specific rules.
+- 2026-06-21 [CODE] D001-D004 ACTIVE (Browser Run explicit vs fallback permissions; anonymous auto fallback; networkidle2 fallback; generic weak-source signals).
+- 2026-10-20 [CODE] D005 ACTIVE: Frontpage is vanilla HTML/CSS/TypeScript in `web/`, bundled by esbuild (`scripts/build-web.ts`) into `dist/web/`, served by Workers Static Assets (`ASSETS` binding); Wrangler `build.command` runs the bundle on deploy/dev.
+- 2026-10-20 [CODE] D006 ACTIVE: `GET /` content-negotiates in the Worker: `text/html` -> `env.ASSETS` `index.html` with CSP; otherwise the existing JSON. `html_handling: "none"` so `/` always reaches the Worker.
+- 2026-10-20 [CODE] D007 ACTIVE: Markdown parsed client-side with `marked`; preview renders in a sandboxed iframe (no scripts) with parent-controlled link opening; the same stylesheet is embedded in downloaded HTML.
 
 # State:
   - Done:
-    - 2026-06-21 [TOOL] Reproduced the Smartbox symptom: direct fetch returns a Salesforce/Aura shell with `Loading`, `Sorry to interrupt`, and `CSS Error`; browser rendering returns the Danish FAQ article.
-    - 2026-06-21 [TOOL] Live `converting.md` returned `x-converting-method: ai` plus weak-source/output warnings, proving the existing Browser Run fallback gate did not activate for public/default traffic.
-    - 2026-06-21 [CODE] Patched anonymous API-key config to permit automatic fallback budgets when Browser Run is globally enabled, while keeping explicit browser and image conversion disabled.
-    - 2026-06-21 [CODE] Patched Browser Run quota/reservation to accept an explicit-vs-fallback permission purpose.
-    - 2026-06-21 [CODE] Patched Browser Run fallback defaults to use `networkidle2` and avoid blocking CSS while preserving explicit Browser Run behavior.
-    - 2026-06-21 [CODE] Patched the orchestrator to enable fallback internally for eligible `mode=auto` requests before cache-key creation.
-    - 2026-06-21 [CODE] Added/updated regression tests for anonymous Smartbox-like fallback, fallback budget semantics, source-profile warnings, explicit anonymous Browser Run blocking, and guarded fallback behavior.
-    - 2026-06-21 [CODE] Updated README, release readiness, acceptance matrix, Cloudflare setup, and PRD docs to match the explicit-vs-fallback Browser Run policy.
-    - 2026-06-21 [TOOL] Verification passed: focused Vitest files, `npm run typecheck`, `npm run check`, `npm run deploy:dry-run`, `npm run smoke:health`, and `git diff --check`.
-    - 2026-06-21 [TOOL] `npm run verify:release` passed its check/env/PRD phases but failed at `npm audit` due existing dependency advisories in `esbuild`, `hono`, `undici`, `vite`, and `ws` dependency paths.
-    - 2026-06-21 [TOOL] `npm audit fix` updated the lockfile dependency graph to clean versions of `wrangler`/`miniflare`, `undici`, `ws`, `vite`, `esbuild`, and `hono`.
-    - 2026-06-21 [TOOL] `npm run verify:release` passed after the dependency update: 27 test files / 104 tests, env hygiene, PRD docs, `npm audit`, Wrangler dry-run, and health smoke.
-    - 2026-06-21 [TOOL] Committed and pushed dependency audit fix as `81ac235` (`Update dependencies for clean audit`) to `origin/main`.
-    - 2026-06-21 [TOOL] Live Smartbox response is `x-converting-cache: MISS`, `x-converting-method: ai`, and includes `browser_fallback_from_weak_ai,browser_fallback_failed:cloudflare_api_error`; deployed fallback is running but failing at Browser Run.
-    - 2026-06-21 [TOOL] Direct Browser Rendering API probe with Dokploy container `CLOUDFLARE_BROWSER_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` returned Cloudflare `401` / code `10000` / `Authentication error`; token verification endpoint says the token is active.
-    - 2026-06-21 [TOOL] Direct Browser Rendering API probe with Dokploy `CLOUDFLARE_API_TOKEN` also returned `401`; current tokens are not authorized for Browser Rendering REST Quick Actions.
-    - 2026-06-21 [CODE] Migrated Browser Run adapter to `env.BROWSER.quickAction("markdown", ...)`, added `browser.binding = "BROWSER"` in `wrangler.jsonc`, removed runtime Browser REST credential requirements, and updated tests/docs/preflight checks.
-    - 2026-06-21 [TOOL] `npm run verify:release` passed after binding migration: 27 test files / 106 tests, env hygiene, PRD docs, clean audit, Wrangler dry-run showing `env.BROWSER Browser Run`, and health smoke.
-    - 2026-06-21 [TOOL] Committed and pushed Browser binding migration as `cd045a5` (`Use Browser Run binding for markdown fallback`) to `origin/main`.
-    - 2026-06-22 [TOOL] Reproduced current production Smartbox response: `x-converting-method: browser`, `x-converting-cache: HIT`, `browser_fallback_from_weak_ai`; output contains the real FAQ article but still starts with the Aura `Loading` / `Sorry to interrupt` / `CSS Error` shell.
-    - 2026-06-22 [CODE] Added a narrow markdown normalizer cleanup for Salesforce/Aura startup shells before rendered content, plus focused pure-normalizer and Browser Run fallback regressions.
-    - 2026-06-22 [TOOL] Verification passed: focused `npm test -- test/text-normalization.test.ts test/browser-fallback.test.ts`, `npm run check`, and full `npm run verify:release` with 27 test files / 108 tests, clean audit, Wrangler dry-run, and health smoke.
+    - 2026-06-22 [TOOL] Browser Run binding migration and Aura shell cleanup committed (`cd045a5`, `e260a2b`); `main` matched `origin/main` on 2026-10-20.
+    - 2026-10-20 [TOOL] Unchanged `main` failed `npm audit` (hono, vitest, nanoid, postcss, sharp/undici via wrangler). Fixed by upgrading wrangler 4.103 -> 4.151.2, @cloudflare/workers-types v4 -> v5, vitest 4.1.12, hono 4.13.13; audit clean, typecheck clean.
+    - 2026-10-20 [CODE] Frontpage built: `web/` (HTML, CSS on Groundwork tokens, TS modules), `scripts/build-web.ts`, `src/routes/home.ts` (Accept negotiation + CSP), `ASSETS` binding, deploy preflight checks for assets/build, Windows path fix in file-line check, docs (README, PRD 04/08, acceptance matrix).
+    - 2026-10-20 [TOOL] Verified: `npm run check` (30 files / 136 tests), PRD + env checks, audit 0, `wrangler deploy --dry-run` (runs custom build, 4 assets), `wrangler dev --local` health OK; Playwright/Chrome at 1440/1024/390 in light+dark: no overflow, no app console errors; typing, tabs (keyboard), copy, download filename, URL validation/redirect, sandboxed preview blocks scripts and javascript: links.
+    - 2026-10-20 [TOOL] `npm run smoke:health` cannot spawn `npm.cmd` on Windows (pre-existing, Linux CI unaffected); equivalent manual `wrangler dev --local` + `/healthz` passed.
   - Now:
-    - 2026-06-22 [CODE] Aura shell cleanup fix is implemented and verified locally; pending commit/push/deploy to affect production.
+    - 2026-10-20 [USER] Approved commit + push. Committing the frontpage (excluding the user's `AGENTS.md` change) and pushing to `origin/main`.
   - Next:
-    - 2026-06-22 [ASSUMPTION] Commit and push the fix, then verify production after Dokploy deploys.
+    - 2026-10-20 [TOOL] Watch the Dokploy redeploy on `kpi-v2-panel` (container `convertingmd-app-*`; start cmd runs D1 migrations then `wrangler deploy`), then verify `https://converting.md/` in a browser and that `curl https://converting.md/` still returns JSON.
 
 # Open questions (UNCONFIRMED if needed - you can be more verbose here, so the user is qualified to answer!):
-- 2026-06-21 [ASSUMPTION] UNCONFIRMED: whether Dokploy's Docker warnings about secrets-as-ARG/ENV block deploy after audit is fixed; current log shows them as warnings, not the failing step.
-- 2026-06-21 [TOOL] CONFIRMED: current Dokploy token env values are active Cloudflare tokens but rejected by Browser Rendering REST API with `401 Authentication error`.
-- 2026-06-21 [TOOL] CONFIRMED: Wrangler 4.103.0 dry-run accepts the `BROWSER` binding and lists it as `env.BROWSER Browser Run`.
+- 2026-10-20 [TOOL] CONFIRMED: Dokploy (Nixpacks, Node 22.12.0) on `kpi-v2-panel` (ssh alias, Codex key): install `npm run install:deploy-runner`; build `npm run check && check:env-hygiene && check:prd-docs && npm audit && deploy:preflight`; start runs `wrangler d1 migrations apply --remote` then `wrangler deploy --secrets-file`, so `build:web` runs at container start. All locked packages support Node 22.12.
 
 # Working set (files/ids/commands):
-- 2026-06-21 [CODE] `src/auth/anonymous.ts`
-- 2026-06-21 [CODE] `src/middleware/auth.ts`
-- 2026-06-21 [CODE] `src/usage/quota.ts`
-- 2026-06-21 [CODE] `src/usage/reservations.ts`
-- 2026-06-21 [CODE] `src/conversion/browser.ts`
-- 2026-06-21 [CODE] `src/conversion/orchestrator.ts`
-- 2026-06-21 [CODE] `test/anonymous-browser-fallback.test.ts`
-- 2026-06-21 [CODE] `test/browser-budget.test.ts`
-- 2026-06-21 [CODE] `test/browser-fallback.test.ts`
-- 2026-06-21 [CODE] `test/route-acceptance.test.ts`
-- 2026-06-21 [CODE] `test/source-profile.test.ts`
-- 2026-06-21 [TOOL] `npm test -- test/source-profile.test.ts test/browser-budget.test.ts test/browser-fallback.test.ts test/anonymous-browser-fallback.test.ts test/route-acceptance.test.ts`
-- 2026-06-21 [TOOL] `npm run typecheck`
-- 2026-06-21 [TOOL] `npm run check`
-- 2026-06-21 [TOOL] `npm run verify:release` failed only at `npm audit`
-- 2026-06-21 [CODE] `package-lock.json`
-- 2026-06-21 [TOOL] `npm run verify:release` passed after dependency update
-- 2026-06-21 [TOOL] `npm run deploy:dry-run`
-- 2026-06-21 [TOOL] `npm run smoke:health`
-- 2026-06-21 [TOOL] `GIT_DIR=.git-local GIT_WORK_TREE=. git diff --check`
-- 2026-06-22 [CODE] `src/conversion/text-normalization.ts`
-- 2026-06-22 [CODE] `test/text-normalization.test.ts`
-- 2026-06-22 [CODE] `test/browser-fallback.test.ts`
-- 2026-06-22 [TOOL] `npm test -- test/text-normalization.test.ts test/browser-fallback.test.ts`
-- 2026-06-22 [TOOL] `npm run check`
-- 2026-06-22 [TOOL] `npm run verify:release`
+- 2026-10-20 [CODE] `web/`, `scripts/build-web.ts`, `src/routes/home.ts`, `src/routes/catchall.ts`, `src/types/env.ts`, `wrangler.jsonc`, `scripts/check-deploy-config.ts`, `scripts/check-file-lines.ts`, `test/helpers.ts`, `test/health.test.ts`
+- 2026-10-20 [TOOL] `npm ci`, `npm run build:web`, `npm run check`, `npm run verify:release`, `npx wrangler dev`

@@ -115,6 +115,18 @@ or boilerplate-only pages can fall back to Browser Run only when:
 Successful responses include request, cache, method, source, output-byte, quota,
 token, browser-ms, and warning headers where applicable.
 
+## Frontpage
+
+Browsers that open `https://converting.md/` get a small web app: a URL field
+that opens `converting.md/{url}`, and a Markdown-to-HTML converter with live
+preview, Copy HTML and Download. API clients that do not ask for `text/html`
+still get the JSON route list from `GET /`.
+
+The page lives in `web/` (plain HTML, CSS and TypeScript, Markdown parsed by
+`marked`). `npm run build:web` bundles it into `dist/web`, which Wrangler serves
+as static assets. Wrangler runs that build itself before `wrangler dev` and
+`wrangler deploy` (`build.command` in `wrangler.jsonc`).
+
 ## Local Development
 
 ```bash
@@ -123,6 +135,10 @@ cp .dev.vars.example .dev.vars
 npm run db:migrate:local
 npm run dev
 ```
+
+`npm run dev` connects the remote `AI` and `BROWSER` bindings, so it needs
+`wrangler login` (or `CLOUDFLARE_API_TOKEN`). `npm run dev -- --local` runs
+without them, which is enough for the frontpage, `/healthz` and admin routes.
 
 Fill `.dev.vars` with local test values:
 

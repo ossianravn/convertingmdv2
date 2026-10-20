@@ -10,6 +10,15 @@
   "name": "converting-md",
   "main": "src/index.ts",
   "compatibility_date": "2026-05-19",
+  "build": {
+    "command": "npm run build:web"
+  },
+  "assets": {
+    "directory": "./dist/web",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
   "ai": {
     "binding": "AI"
   },

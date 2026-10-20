@@ -12,7 +12,17 @@ GET  /v1/markdown?url=...
 GET  /https://example.com/page
 ```
 
-`GET /` should return a simple landing/documentation response.
+`GET /` content-negotiates:
+
+```txt
+Accept lists text/html (browsers)  -> frontpage HTML from the ASSETS binding
+anything else (curl, API clients)  -> JSON route list
+```
+
+The frontpage is a static asset (`web/`, bundled into `dist/web`) with a
+Markdown-to-HTML converter and a URL field that opens `/https://...`. The Worker
+adds `X-Converting-Request-Id`, `Vary: Accept` and a Content-Security-Policy.
+`assets.html_handling` must stay `"none"` so `/` always reaches the Worker.
 
 `GET /healthz` should return:
 

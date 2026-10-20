@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { extname, join, relative, resolve } from "node:path";
+import { extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export interface OversizedFile {
@@ -7,7 +7,7 @@ export interface OversizedFile {
   lines: number;
 }
 
-const defaultDirs = ["src", "test", "scripts"];
+const defaultDirs = ["src", "test", "scripts", "web"];
 const ignoredDirs = new Set(["node_modules", "dist", ".wrangler", "migrations"]);
 const checkedExtensions = new Set([".ts", ".tsx"]);
 
@@ -41,7 +41,7 @@ async function scanDirectory(path: string, root: string, maxLines: number, files
     if (entry.isFile() && checkedExtensions.has(extname(entry.name))) {
       const lines = await countLines(child);
       if (lines > maxLines) {
-        files.push({ path: relative(root, child), lines });
+        files.push({ path: relative(root, child).split(sep).join("/"), lines });
       }
     }
   }

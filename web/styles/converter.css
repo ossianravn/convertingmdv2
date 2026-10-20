@@ -1,0 +1,130 @@
+.converter {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-group);
+}
+
+.pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: clamp(28rem, 72svh, 46rem);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-xs);
+  container: pane / inline-size;
+  transition: border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.pane:has(.editor:focus-visible) {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px var(--ring-soft);
+}
+
+/* The header's text and the pane's text share one inset. */
+.pane-header {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-control);
+  min-height: calc(var(--control-height-sm) + 2 * var(--space-2) + 1px);
+  padding: var(--space-2) var(--inset-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.pane-title {
+  font-weight: 500;
+}
+
+.pane-actions {
+  display: flex;
+  gap: var(--gap-control);
+  margin-left: auto;
+}
+
+.pane-body,
+.pane-panel {
+  min-height: 0;
+}
+
+.pane-panel {
+  height: 100%;
+}
+
+.pane-panel[hidden] {
+  display: none;
+}
+
+.editor {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: var(--inset-card);
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: var(--text-code);
+  line-height: 1.65;
+  tab-size: 4;
+}
+
+.preview-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--card);
+}
+
+.html-output {
+  height: 100%;
+  overflow: auto;
+  padding: var(--inset-card);
+  font-size: var(--text-code);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.html-output:focus-visible {
+  outline-offset: -2px;
+}
+
+/* A narrow pane keeps both actions; their labels move to the accessible name. */
+@container pane (width < 27rem) {
+  .pane-actions .button {
+    width: var(--control-height-sm);
+    padding: 0;
+  }
+
+  .pane-actions .button-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@media (width < 52rem) {
+  .converter {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pane {
+    height: clamp(20rem, 50svh, 30rem);
+  }
+
+  .pane-output {
+    height: clamp(24rem, 65svh, 38rem);
+  }
+}
+
+@media (pointer: coarse) {
+  .editor {
+    font-size: var(--text-section);
+  }
+}

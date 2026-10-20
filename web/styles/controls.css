@@ -1,0 +1,153 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: var(--control-height);
+  padding-inline: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: var(--text-body);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard),
+    transform 100ms var(--ease-standard);
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.button-sm {
+  height: var(--control-height-sm);
+  padding-inline: 0.625rem;
+}
+
+.button-lg {
+  height: var(--control-height-lg);
+  padding-inline: var(--space-4);
+}
+
+.button-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.button-outline {
+  border-color: var(--input);
+  background: var(--input-surface);
+}
+
+.button-icon {
+  width: var(--control-height);
+  padding: 0;
+}
+
+.button-icon.button-xs {
+  width: var(--control-height-xs);
+  height: var(--control-height-xs);
+}
+
+@media (hover: hover) {
+  .button-primary:hover {
+    background: var(--primary-hover);
+  }
+
+  .button-outline:hover,
+  .button-ghost:hover {
+    background: var(--muted);
+  }
+}
+
+/* Every state's label sits in one grid cell; only the current one shows. */
+.button-labels {
+  display: grid;
+}
+
+.button-labels > * {
+  display: inline-flex;
+  grid-area: 1 / 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  visibility: hidden;
+}
+
+[data-state="idle"] > .button-labels > [data-label="idle"],
+[data-state="busy"] > .button-labels > [data-label="busy"],
+[data-state="done"] > .button-labels > [data-label="done"],
+[data-state="failed"] > .button-labels > [data-label="failed"] {
+  visibility: visible;
+}
+
+[data-label="done"] svg {
+  color: var(--success);
+}
+
+[data-label="failed"] {
+  color: var(--destructive);
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Segmented control (Groundwork): one --input frame, the chosen segment muted. */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  height: var(--control-height-sm);
+  padding: 2px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+}
+
+.segmented [role="tab"] {
+  height: 100%;
+  padding-inline: 0.625rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: var(--text-body);
+  font-weight: 500;
+  transition:
+    background-color var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard);
+}
+
+.segmented [role="tab"][aria-selected="true"] {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.segmented [role="tab"]:focus-visible {
+  outline-offset: 0;
+}
+
+@media (hover: hover) {
+  .segmented [role="tab"]:hover {
+    color: var(--foreground);
+  }
+}

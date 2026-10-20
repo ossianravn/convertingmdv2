@@ -1,0 +1,99 @@
+/* Values follow Groundwork's theme tokens (ink primary, indigo brand) and its
+   type, spacing and control-height ramps. Components use roles, never raw values. */
+:root {
+  color-scheme: light dark;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --text-meta: 0.75rem;
+  --text-code: 0.8125rem;
+  --text-body: 0.875rem;
+  --text-section: 1rem;
+  --text-feature: 1.25rem;
+  --text-lead: 1.0625rem;
+  --text-display: clamp(2rem, 1.35rem + 2.6vw, 3rem);
+  --leading-body: 1.5;
+  --leading-heading: 1.375;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --gap-inline: var(--space-1);
+  --gap-control: var(--space-2);
+  --gap-item: var(--space-3);
+  --gap-group: var(--space-4);
+  --gap-zone: var(--space-6);
+  --gap-section: clamp(3rem, 6vw, 5rem);
+  --inset-page: clamp(1rem, 3vw, 2rem);
+  --inset-card: var(--space-4);
+  --inset-row: var(--space-3);
+
+  --control-height-xs: 1.75rem;
+  --control-height-sm: 2rem;
+  --control-height: 2.25rem;
+  --control-height-lg: 2.5rem;
+  --header-height: 4rem;
+  --content-width: 78rem;
+
+  --radius: 0.65rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+
+  --motion-fast: 150ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.23 0.012 270);
+  --card: oklch(1 0 0);
+  --muted: oklch(0.963 0.003 270);
+  --muted-foreground: oklch(0.49 0.014 270);
+  --placeholder: oklch(0.62 0.012 270);
+  --border: oklch(0.916 0.006 270);
+  --input: oklch(0.922 0 0);
+  --input-surface: transparent;
+  --primary: oklch(0.21 0.008 270);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-hover: oklch(0.3 0.01 270);
+  --brand: oklch(0.51 0.195 278);
+  --ring: var(--brand);
+  --ring-soft: color-mix(in oklch, var(--ring) 28%, transparent);
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.43 0.09 161);
+  --shadow-xs: 0 1px 2px oklch(0.2 0.01 270 / 5%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.155 0.005 270);
+    --foreground: oklch(0.93 0.005 270);
+    --card: oklch(0.18 0.006 270);
+    --muted: oklch(0.25 0.012 270);
+    --muted-foreground: oklch(0.72 0.012 270);
+    --placeholder: oklch(0.56 0.012 270);
+    --border: oklch(0.305 0.012 270);
+    --input: oklch(1 0 0 / 15%);
+    --input-surface: oklch(1 0 0 / 4.5%);
+    --primary: oklch(0.95 0.004 270);
+    --primary-foreground: oklch(0.17 0.006 270);
+    --primary-hover: oklch(0.86 0.006 270);
+    --brand: oklch(0.76 0.12 278);
+    --destructive: oklch(0.704 0.191 22.216);
+    --success: oklch(0.8 0.11 161);
+    --shadow-xs: 0 1px 2px oklch(0 0 0 / 30%);
+  }
+}
+
+/* Touch screens keep 44px targets and 16px text entry (no zoom on focus). */
+@media (pointer: coarse) {
+  :root {
+    --control-height-sm: 2.75rem;
+    --control-height: 2.75rem;
+    --control-height-lg: 2.75rem;
+  }
+}

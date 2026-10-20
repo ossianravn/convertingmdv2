@@ -1,0 +1,105 @@
+.examples {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--gap-zone);
+  max-width: 52rem;
+}
+
+.example-title {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.code-block {
+  position: relative;
+  margin-top: var(--space-2);
+}
+
+.code-block pre {
+  overflow-x: auto;
+  padding: var(--space-3) calc(var(--control-height-xs) + var(--space-4)) var(--space-3) var(--inset-card);
+  border-radius: var(--radius-lg);
+  background: var(--muted);
+  font-size: var(--text-code);
+  line-height: 1.6;
+}
+
+.code-block .button {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  color: var(--muted-foreground);
+}
+
+@media (hover: hover) {
+  .code-block .button:hover {
+    background: var(--background);
+    color: var(--foreground);
+  }
+}
+
+.reference-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-inline);
+  margin-top: var(--gap-zone);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .reference-link:hover {
+    text-decoration: underline;
+  }
+}
+
+.syntax-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-zone) var(--space-12);
+  align-items: start;
+}
+
+.syntax-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.syntax-table caption {
+  padding-bottom: var(--space-2);
+  font-weight: 600;
+  text-align: left;
+}
+
+.syntax-table th {
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  text-align: left;
+}
+
+.syntax-table td {
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+/* Sized to the longest label ("Horizontal rule"), so each example sits beside its name. */
+.syntax-table td:first-child {
+  width: 9rem;
+  padding-right: var(--space-4);
+}
+
+.syntax-table code,
+.syntax-table pre {
+  font-size: var(--text-code);
+  line-height: 1.6;
+}
+
+@media (width < 52rem) {
+  .syntax-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

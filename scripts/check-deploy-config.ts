@@ -18,6 +18,7 @@ export function findDeployConfigIssues(config: unknown): DeployConfigIssue[] {
 
   return [
     ...browserBindingIssues(config["browser"]),
+    ...frontpageIssues(config["assets"], config["build"]),
     ...bindingIssues(config["d1_databases"], "d1_databases", "DB", "database_id"),
     ...bindingIssues(config["kv_namespaces"], "kv_namespaces", "CACHE_KV", "id"),
     ...productionVarIssues(config["vars"])
@@ -30,6 +31,23 @@ function browserBindingIssues(value: unknown): DeployConfigIssue[] {
     return [{ path: "browser.binding", message: 'browser binding must be "BROWSER".' }];
   }
   return [];
+}
+
+// `/` must reach the Worker, which picks HTML or JSON and adds the page's CSP.
+// html_handling "auto-trailing-slash" would serve index.html for `/` directly.
+const expectedAssets = { binding: "ASSETS", directory: "./dist/web", html_handling: "none" } as const;
+
+function frontpageIssues(assets: unknown, build: unknown): DeployConfigIssue[] {
+  const issues: DeployConfigIssue[] = Object.entries(expectedAssets).flatMap(([key, expected]) => {
+    const actual = isRecord(assets) ? assets[key] : undefined;
+    return actual === expected ? [] : [{ path: `assets.${key}`, message: `assets.${key} must be ${JSON.stringify(expected)}.` }];
+  });
+
+  if (!isRecord(build) || build["command"] !== "npm run build:web") {
+    issues.push({ path: "build.command", message: 'build.command must be "npm run build:web".' });
+  }
+
+  return issues;
 }
 
 function bindingIssues(value: unknown, path: string, binding: string, idKey: string): DeployConfigIssue[] {
