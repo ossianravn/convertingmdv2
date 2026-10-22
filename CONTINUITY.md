@@ -42,8 +42,9 @@
     - 2026-10-22 [CODE] Built: Jev content check (`src/typesafe/system-one.ts`, `src/conversion/content-check.ts`, pinned jev-1.14.0), verdict policy (`verification.ts`: 404/410->404, 401->403, other non-2xx->Frankensurf; Jev outcomes; TypeSafe down -> uncached + warning), Frankensurf client + D1 budget (`frankensurf.ts`, `usage/frankensurf-budget.ts`, migration 0002), orchestrator split (`pipeline-support.ts`, `browser-fallback.ts`, `auto-pipeline.ts`), cache key v5, `scripts/deploy-start.sh`, `deploy/frankensurf/docker-compose.yml`, docs (README, PRD 07b/08).
     - 2026-10-22 [TOOL] Verified: 31 files / 145 tests, check/PRD/env/audit/dry-run green; live TypeSafe via new client 155-242 ms with correct answers.
     - 2026-10-22 [TOOL] Dokploy (panel.ossianravn.dev, key in local .dev.vars): created isolated Compose app `frankensurf` (composeId A7NjwI6WNyd4BwMC6XFkB, appName compose-connect-solid-state-alarm-eukfbh; rename via API did not apply) with image 0.51.0; healthy. In-container scrape of the test URL: 200 via http rung, 21,858 chars, 0.8 s. Isolation: other containers unresolvable; host gateway exposes only already-public ports.
+    - 2026-10-22 [TOOL] DNS surf.converting.md -> 45.13.225.27 added by user; Dokploy domain (port 3002, Let's Encrypt) live: /health 200, unauthenticated scrape 401, keyed scrape of the test URL 200 via http in ~1 s.
   - Now:
-    - 2026-10-22 [USER] Waiting for DNS `surf.converting.md A 45.13.225.27` (DNS only). Then: Dokploy domain for frankensurf (port 3002, Let's Encrypt), set DISABLE_FRANKENSURF="false", apply converting.md env (`node C:/tmp/cmd-dev/dokploy.mjs <repo> convertingmd-env-apply`), push, verify production.
+    - 2026-10-22 [USER] Approved: enable fallback (DISABLE_FRANKENSURF="false"), apply converting.md Dokploy env (TYPESAFE_API_KEY, FRANKENSURF_API_KEY, NIXPACKS_START_CMD=bash scripts/deploy-start.sh), push, verify production.
   - Next:
     - 2026-10-22 [ASSUMPTION] Note for user: Docker Swarm ports 2377/7946 are open to the internet on kpi-v2-panel (unrelated finding).
 
