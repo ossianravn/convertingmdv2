@@ -115,6 +115,29 @@ or boilerplate-only pages can fall back to Browser Run only when:
 Successful responses include request, cache, method, source, output-byte, quota,
 token, browser-ms, and warning headers where applicable.
 
+## When a Page Is Blocked
+
+A site can answer 200 and still hand back a firewall challenge, an app shell, a
+cookie wall, a soft 404 or a paywall. converting.md checks every fresh
+conversion with TypeSafe's Jev before returning or caching it:
+
+- real content is returned and cached
+- a block, app shell or cookie wall is fetched again through
+  [Frankensurf](https://github.com/yail259/frankensurf), which runs on our own
+  server outside Cloudflare and escalates from a plain fetch to stealth browsers
+- a missing page answers `404 source_not_found`; a paywall `403 source_login_required`
+- if nothing gets the real page, the answer is `502 source_blocked`, never the
+  block page itself
+
+Warnings such as `content_check:access_block`, `frankensurf_fallback:...` and
+`frankensurf_via:httpx` in `X-Converting-Warnings` show what happened.
+
+Configuration: `TYPESAFE_API_KEY` (secret), `TYPESAFE_MODEL` (a pinned Jev
+version), and for the fallback `DISABLE_FRANKENSURF`, `FRANKENSURF_URL`,
+`FRANKENSURF_API_KEY` (secret), `FRANKENSURF_TIMEOUT_MS` and the global
+`GLOBAL_DAILY_FRANKENSURF_LIMIT` / `GLOBAL_MONTHLY_FRANKENSURF_LIMIT`.
+The Frankensurf service itself is `deploy/frankensurf/docker-compose.yml`.
+
 ## Frontpage
 
 Browsers that open `https://converting.md/` get a small web app: a URL field
@@ -256,7 +279,13 @@ Dokploy/Nixpacks deploy runners should use:
 
 ```bash
 NIXPACKS_INSTALL_CMD=npm run install:deploy-runner
+NIXPACKS_START_CMD=bash scripts/deploy-start.sh
 ```
+
+`scripts/deploy-start.sh` applies D1 migrations and deploys with the Worker
+secrets it lists (`ADMIN_TOKEN`, `API_KEY_PEPPER`, `TYPESAFE_API_KEY`,
+`FRANKENSURF_API_KEY`), taken from the Dokploy environment. A missing secret
+stops the deploy.
 
 ## Production Checklist
 
@@ -294,6 +323,9 @@ smoke.
 - `401 invalid_api_key`: key is wrong or the hash pepper changed
 - `403 revoked_api_key`: key is inactive or revoked
 - `403 browser_not_allowed`: key lacks browser permission
+- `502 source_blocked`: the site served a challenge or block page to every fetcher
+- `404 source_not_found` / `403 source_login_required`: the source page is missing or behind a sign-in
+- `429 frankensurf_budget_exceeded`: the daily or monthly fallback budget is spent
 - `403 image_conversion_not_allowed`: image conversion is disabled or disallowed
 - `429 quota_exceeded`: daily or monthly request limit reached
 - `429 browser_budget_exceeded`: Browser Run budget reached

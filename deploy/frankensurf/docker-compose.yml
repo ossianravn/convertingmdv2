@@ -1,0 +1,26 @@
+# Frankensurf: converting.md's fallback fetcher (github.com/yail259/frankensurf).
+# The Worker calls it at https://surf.converting.md/v1/scrape when a page is
+# blocked from Cloudflare or does not render there.
+#
+# Deployed in Dokploy (project ConvertingMD) as a Compose app with "Isolated
+# deployment" on: it shares a network only with Traefik, so JavaScript in the
+# pages it renders cannot reach Dokploy, databases or other apps on the host.
+# Dokploy holds this file; keep the two in sync.
+services:
+  frankensurf:
+    image: ghcr.io/yail259/frankensurf:0.51.0
+    restart: unless-stopped
+    # Browsers need shared memory; each concurrent browser read takes ~1 GB.
+    shm_size: 1gb
+    mem_limit: 3g
+    cpus: 2
+    environment:
+      FRANKENSURF_API_KEY: ${FRANKENSURF_API_KEY:?FRANKENSURF_API_KEY is required}
+      FRANKENSURF_BLOCK_PRIVATE_NETWORK: "1"
+    volumes:
+      - frankensurf-data:/data
+    expose:
+      - "3002"
+
+volumes:
+  frankensurf-data:

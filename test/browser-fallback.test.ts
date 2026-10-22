@@ -4,7 +4,7 @@ import { parseConfig } from "../src/config";
 import { convertMarkdown, type ConversionContext } from "../src/conversion/orchestrator";
 import type { ConversionResult } from "../src/conversion/result";
 import type { ApiKey, MarkdownRequest } from "../src/types/api";
-import { createBrowserRunStub, makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv, stubFetch } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -20,7 +20,7 @@ describe("guarded browser fallback", () => {
       .mockResolvedValueOnce(htmlResponse(jsAppShell()))
       .mockResolvedValueOnce(htmlResponse(jsAppShell()));
     const browserSpy = vi.fn(async () => browserResponse(renderedMarkdown()));
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const result = await convertMarkdown(
       markdownRequest(),
@@ -48,7 +48,7 @@ describe("guarded browser fallback", () => {
       .mockResolvedValueOnce(htmlResponse(jsAppShell()))
       .mockResolvedValueOnce(htmlResponse(jsAppShell()));
     const browserSpy = vi.fn(async () => new Response("failed", { status: 502 }));
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const result = await convertMarkdown(
       markdownRequest({ browser: { enabled: true } }),
@@ -76,7 +76,7 @@ describe("guarded browser fallback", () => {
       .mockResolvedValueOnce(htmlResponse(jsAppShell()))
       .mockResolvedValueOnce(htmlResponse(jsAppShell()));
     const browserSpy = vi.fn(async () => browserResponse(auraShellMarkdown()));
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const result = await convertMarkdown(
       markdownRequest(),
@@ -123,8 +123,7 @@ describe("guarded browser fallback", () => {
 
   it("does not cache weak AI output when fallback is not allowed", async () => {
     const kv = createMemoryKv();
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi
         .fn()
         .mockResolvedValueOnce(htmlResponse(jsAppShell()))
@@ -268,6 +267,7 @@ function weakCachedAiResult(): ConversionResult {
     outputBytes: 180,
     inputBytes: 30542,
     sourceContentType: "text/html; charset=utf-8",
+    sourceStatus: 200,
     warnings: ["source_js_app_shell"],
     requestId: "req_old"
   };

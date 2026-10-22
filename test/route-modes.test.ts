@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { hashApiKey } from "../src/auth/hash";
 import { app } from "../src/app";
 import { getPeriodKeys } from "../src/usage/periods";
-import { createBrowserRunStub, makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv, stubFetch } from "./helpers";
 import { apiKeyRow, createMemoryD1, type CounterDbRow } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -13,7 +13,7 @@ afterEach(() => {
 describe("conversion mode routes", () => {
   it("counts native conversions and bytes for non-cache successes", async () => {
     const setup = await authedSetup();
-    vi.stubGlobal("fetch", vi.fn(async () => markdownResponse("# Native")));
+    stubFetch(vi.fn(async () => markdownResponse("# Native")));
 
     const response = await app.fetch(markdownPost(setup.rawKey, { mode: "native" }), setup.env);
 
@@ -28,7 +28,7 @@ describe("conversion mode routes", () => {
   it("counts AI conversions and exposes token headers", async () => {
     const setup = await authedSetup();
     const aiSpy = vi.fn(async () => ({ markdown: "# AI", tokens: 42 }));
-    vi.stubGlobal("fetch", vi.fn(async () => htmlResponse("<main>Hello</main>")));
+    stubFetch(vi.fn(async () => htmlResponse("<main>Hello</main>")));
 
     const response = await app.fetch(
       markdownPost(setup.rawKey, { mode: "ai" }),
@@ -64,7 +64,7 @@ describe("conversion mode routes", () => {
     const setup = await authedSetup(undefined, createMemoryKv());
     setup.kv.entries.set(await cacheKeyForDefault(), cachedAiResult());
     const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const response = await app.fetch(markdownPost(setup.rawKey, { mode: "auto" }), setup.env);
 

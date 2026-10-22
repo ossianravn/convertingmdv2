@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { app } from "../src/app";
 import { hashApiKey } from "../src/auth/hash";
 import { getPeriodKeys } from "../src/usage/periods";
-import { makeEnv } from "./helpers";
+import { makeEnv, stubFetch } from "./helpers";
 import { apiKeyRow, counterRow, createMemoryD1, type ApiKeyDbRow, type CounterDbRow } from "./fakes/d1";
 
 afterEach(() => {
@@ -12,8 +12,7 @@ afterEach(() => {
 describe("request quotas", () => {
   it("increments key and global request counters before conversion", async () => {
     const { env, rawKey, d1 } = await createKeyEnv();
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi.fn(async () => new Response("# Native", { headers: { "Content-Type": "text/markdown" } }))
     );
 
@@ -35,7 +34,7 @@ describe("request quotas", () => {
     const periods = getPeriodKeys(new Date());
     d1.seedCounter(counterRow({ scope_id: "key_quota", period: "day", period_key: periods.day, requests: 1 }));
     const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const response = await app.fetch(markdownRequest(rawKey), env);
 
@@ -53,7 +52,7 @@ describe("request quotas", () => {
     const periods = getPeriodKeys(new Date());
     d1.seedCounter(counterRow({ scope_id: "key_quota", period: "month", period_key: periods.month, requests: 1 }));
     const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const response = await app.fetch(markdownRequest(rawKey), env);
 

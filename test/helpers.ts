@@ -1,3 +1,5 @@
+import { vi } from "vitest";
+import type { PageOutcome } from "../src/conversion/content-check";
 import type { Env } from "../src/types/env";
 
 export function makeEnv(overrides: Partial<Env> = {}): Env {
@@ -24,6 +26,7 @@ export function makeEnv(overrides: Partial<Env> = {}): Env {
     GLOBAL_MONTHLY_BROWSER_MS_LIMIT: "36000000",
     GLOBAL_DAILY_IMAGE_LIMIT: "50",
     GLOBAL_MONTHLY_IMAGE_LIMIT: "500",
+    TYPESAFE_API_KEY: "test-typesafe-key",
     ...overrides
   };
 }
@@ -70,4 +73,33 @@ function createKvStub(): KVNamespace {
       return undefined;
     }
   } as unknown as KVNamespace;
+}
+
+type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+export type JevAnswer = PageOutcome | ((page: { requested_url: string; http_status: unknown; content: string }) => PageOutcome);
+
+// Stubs global fetch for source requests while a fake Jev answers TypeSafe
+// calls, so source spies only see source traffic. Returns the Jev requests.
+export function stubFetch(sourceFetch: FetchLike, jev: JevAnswer = "real_content"): unknown[] {
+  const jevRequests: unknown[] = [];
+  // A vi.fn, so tests that inspect `fetch.mock.calls` keep working.
+  vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = input instanceof Request ? input.url : String(input);
+    if (!url.startsWith("https://api.typesafe.ai/")) return sourceFetch(input, init);
+
+    const body = JSON.parse(String(init?.body)) as { state: { page: { requested_url: string; http_status: unknown; content: string } } };
+    jevRequests.push(body);
+    const choice = typeof jev === "function" ? jev(body.state.page) : jev;
+    return Response.json({
+      model: "jev-1.14.0",
+      answers: { answer: { type: "choice", choice, probabilities: jevProbabilities(choice), confidence: 0.98 } },
+      usage: { input_tokens: 600, output_tokens: 68 }
+    });
+  }));
+  return jevRequests;
+}
+
+function jevProbabilities(choice: PageOutcome): Record<PageOutcome, number> {
+  const outcomes: PageOutcome[] = ["real_content", "access_block", "javascript_shell", "consent_wall", "not_found", "login_wall"];
+  return Object.fromEntries(outcomes.map((outcome) => [outcome, outcome === choice ? 0.98 : 0.004])) as Record<PageOutcome, number>;
 }

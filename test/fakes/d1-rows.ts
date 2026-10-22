@@ -32,6 +32,7 @@ export interface CounterDbRow {
   image_requests: number;
   browser_ms_used: number;
   browser_ms_reserved: number;
+  frankensurf_requests: number;
   bytes_in: number;
   bytes_out: number;
   created_at: string;
@@ -98,6 +99,7 @@ export function counterRow(overrides: Partial<CounterDbRow>): CounterDbRow {
     image_requests: 0,
     browser_ms_used: 0,
     browser_ms_reserved: 0,
+    frankensurf_requests: 0,
     bytes_in: 0,
     bytes_out: 0,
     created_at: "2026-05-19T00:00:00.000Z",

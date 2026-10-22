@@ -4,7 +4,7 @@ import { tryAiMarkdown } from "../src/conversion/ai";
 import type { ApiKey, MarkdownRequest } from "../src/types/api";
 import type { AiMarkdownResult, AiToMarkdownOptions } from "../src/types/env";
 import { getPeriodKeys } from "../src/usage/periods";
-import { makeEnv } from "./helpers";
+import { makeEnv, stubFetch } from "./helpers";
 import { counterRow, createMemoryD1, type CounterDbRow } from "./fakes/d1";
 
 type ToMarkdown = (input: unknown, options?: AiToMarkdownOptions) => Promise<AiMarkdownResult>;
@@ -17,7 +17,7 @@ describe("image conversion quota", () => {
   it("blocks image conversion when globally disabled", async () => {
     const d1 = createMemoryD1();
     const aiSpy = vi.fn<ToMarkdown>();
-    vi.stubGlobal("fetch", imageFetch());
+    stubFetch(imageFetch());
 
     await expect(callAi(d1, aiSpy, { allowImages: true })).rejects.toMatchObject({
       code: "image_conversion_not_allowed",
@@ -30,7 +30,7 @@ describe("image conversion quota", () => {
   it("charges image quota and passes image conversion options", async () => {
     const d1 = createMemoryD1();
     const aiSpy = vi.fn<ToMarkdown>(async () => ({ markdown: "# Image", tokens: 7 }));
-    vi.stubGlobal("fetch", imageFetch());
+    stubFetch(imageFetch());
 
     const result = await callAi(d1, aiSpy, { allowImages: true }, { DISABLE_IMAGE_CONVERSION: "false" });
 
@@ -53,7 +53,7 @@ describe("image conversion quota", () => {
       counterRow({ scope_id: "key_image", period: "day", period_key: periods.day, image_requests: 1 })
     );
     const aiSpy = vi.fn<ToMarkdown>();
-    vi.stubGlobal("fetch", imageFetch());
+    stubFetch(imageFetch());
 
     await expect(
       callAi(d1, aiSpy, { allowImages: true, dailyImageLimit: 1 }, { DISABLE_IMAGE_CONVERSION: "false" })
@@ -74,7 +74,7 @@ describe("image conversion quota", () => {
       })
     );
     const aiSpy = vi.fn<ToMarkdown>();
-    vi.stubGlobal("fetch", imageFetch());
+    stubFetch(imageFetch());
 
     await expect(
       callAi(

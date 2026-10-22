@@ -2,3 +2,5 @@ ADMIN_TOKEN=replace_me
 API_KEY_PEPPER=replace_me
 REQUIRE_AUTH=true
 ALLOW_ANON=false
+TYPESAFE_API_KEY=replace_me
+FRANKENSURF_API_KEY=replace_me

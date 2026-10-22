@@ -18,7 +18,8 @@ describe("deploy config preflight", () => {
           ENVIRONMENT: "development",
           REQUIRE_AUTH: "false",
           ALLOW_ANON: "false",
-          DISABLE_IMAGE_CONVERSION: "false"
+          DISABLE_IMAGE_CONVERSION: "false",
+          TYPESAFE_MODEL: "jev-1.14.0"
         }
       })
     );
@@ -50,6 +51,15 @@ describe("deploy config preflight", () => {
     ]);
   });
 
+  it("requires a pinned Jev model and an https Frankensurf URL when enabled", () => {
+    const vars = { ...validConfig({}).vars, TYPESAFE_MODEL: "jev-latest", DISABLE_FRANKENSURF: "false", FRANKENSURF_URL: "http://surf.example" };
+
+    expect(findDeployConfigIssues(validConfig({ vars }))).toEqual([
+      { path: "vars.TYPESAFE_MODEL", message: 'TYPESAFE_MODEL must be a pinned Jev version such as "jev-1.14.0".' },
+      { path: "vars.FRANKENSURF_URL", message: "FRANKENSURF_URL must be an https:// URL when Frankensurf is enabled." }
+    ]);
+  });
+
   it("accepts real resource IDs and safe production vars", () => {
     expect(findDeployConfigIssues(validConfig({}))).toEqual([]);
   });
@@ -62,7 +72,8 @@ describe("deploy config preflight", () => {
             ENVIRONMENT: "production",
             REQUIRE_AUTH: "false",
             ALLOW_ANON: "true",
-            DISABLE_IMAGE_CONVERSION: "true"
+            DISABLE_IMAGE_CONVERSION: "true",
+            TYPESAFE_MODEL: "jev-1.14.0"
           }
         })
       )
@@ -87,7 +98,8 @@ function validConfig(overrides: ConfigOverrides) {
       ENVIRONMENT: "production",
       REQUIRE_AUTH: "true",
       ALLOW_ANON: "false",
-      DISABLE_IMAGE_CONVERSION: "true"
+      DISABLE_IMAGE_CONVERSION: "true",
+      TYPESAFE_MODEL: "jev-1.14.0"
     }
   };
 }

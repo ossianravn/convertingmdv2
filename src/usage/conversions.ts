@@ -20,7 +20,8 @@ async function incrementMethodCounter(
   result: ConversionResult,
   now: Date
 ): Promise<void> {
-  if (result.method === "browser") return;
+  // Browser Run and Frankensurf count their calls where they are budgeted.
+  if (result.method === "browser" || result.method === "frankensurf") return;
 
   const column = result.method === "native" ? "native_requests" : "ai_requests";
   await incrementCounterForPeriods(env, "key", apiKeyId, column, 1, now);

@@ -52,6 +52,7 @@ export async function tryBrowserMarkdown(
       outputBytes,
       inputBytes: 0,
       sourceContentType: "text/html",
+      sourceStatus: null,
       warnings: [],
       requestId
     };

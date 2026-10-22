@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { app } from "../src/app";
-import { createBrowserRunStub, makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv, stubFetch } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -16,7 +16,7 @@ describe("anonymous automatic browser fallback", () => {
       .mockResolvedValueOnce(htmlResponse(scriptHeavyShell()))
       .mockResolvedValueOnce(htmlResponse(scriptHeavyShell()));
     const browserSpy = vi.fn(async () => browserResponse("# Hvordan booker jeg et ophold?\n\nTrin 1: Log ind og registrer dit gavekort."));
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const env = makeEnv({
       DB: d1.database,

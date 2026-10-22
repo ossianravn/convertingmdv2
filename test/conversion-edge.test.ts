@@ -5,7 +5,7 @@ import { tryBrowserMarkdown } from "../src/conversion/browser";
 import { tryNativeMarkdown } from "../src/conversion/native";
 import type { ApiKey, MarkdownRequest } from "../src/types/api";
 import type { AiMarkdownResult, AiToMarkdownOptions } from "../src/types/env";
-import { makeEnv } from "./helpers";
+import { makeEnv, stubFetch } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 
 type ToMarkdown = (input: unknown, options?: AiToMarkdownOptions) => Promise<AiMarkdownResult>;
@@ -16,8 +16,7 @@ afterEach(() => {
 
 describe("conversion edge cases", () => {
   it("native captures token headers", async () => {
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi.fn(async () => new Response("# Native", { headers: { "Content-Type": "text/markdown", "x-markdown-tokens": "9" } }))
     );
 
@@ -28,7 +27,7 @@ describe("conversion edge cases", () => {
   });
 
   it("native rejects HTML responses as unavailable", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("<html></html>", { headers: { "Content-Type": "text/html" } })));
+    stubFetch(vi.fn(async () => new Response("<html></html>", { headers: { "Content-Type": "text/html" } })));
 
     await expect(tryNativeMarkdown("https://example.com", parseConfig(makeEnv()), "req_test")).rejects.toMatchObject({
       code: "conversion_failed",
@@ -37,8 +36,7 @@ describe("conversion edge cases", () => {
   });
 
   it("native rejects HTML even when page scaffolding contains Markdown-shaped text", async () => {
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi.fn(
         async () =>
           new Response("<script>const value = '[cta](https://example.com)'</script>", {
@@ -54,7 +52,7 @@ describe("conversion edge cases", () => {
   });
 
   it("native rejects Markdown output over the output limit", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("# Oversized", { headers: { "Content-Type": "text/markdown" } })));
+    stubFetch(vi.fn(async () => new Response("# Oversized", { headers: { "Content-Type": "text/markdown" } })));
 
     await expect(
       tryNativeMarkdown("https://example.com", parseConfig(makeEnv({ MAX_OUTPUT_BYTES: "3" })), "req_test")
@@ -63,8 +61,7 @@ describe("conversion edge cases", () => {
 
   it("AI passes an HTML document with hostname and cssSelector", async () => {
     const aiSpy = vi.fn<ToMarkdown>(async () => ({ markdown: "# AI", tokens: 5 }));
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi.fn(async () => new Response("<main>Hello</main>", { headers: { "Content-Type": "text/html; charset=UTF-8" } }))
     );
 
@@ -89,8 +86,7 @@ describe("conversion edge cases", () => {
 
   it("AI treats unmistakable HTML bodies as HTML when the origin sends a generic content type", async () => {
     const aiSpy = vi.fn<ToMarkdown>(async () => ({ markdown: "# AI", tokens: 5 }));
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi.fn(
         async () =>
           new Response("<!doctype html><html><body>Hello</body></html>", {
@@ -113,8 +109,7 @@ describe("conversion edge cases", () => {
 
   it("AI rejects generic content types when the body is not clearly HTML", async () => {
     const aiSpy = vi.fn<ToMarkdown>();
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi.fn(async () => new Response("not html", { headers: { "Content-Type": "application/octet-stream" } }))
     );
 
@@ -126,7 +121,7 @@ describe("conversion edge cases", () => {
 
   it("AI rejects unsupported content types before calling Workers AI", async () => {
     const aiSpy = vi.fn<ToMarkdown>();
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { headers: { "Content-Type": "application/json" } })));
+    stubFetch(vi.fn(async () => new Response("{}", { headers: { "Content-Type": "application/json" } })));
 
     await expect(
       tryAiMarkdown(makeEnv({ AI: { toMarkdown: aiSpy } }), markdownRequest({}), apiKey({}), parseConfig(makeEnv()), "req_test")
@@ -137,7 +132,7 @@ describe("conversion edge cases", () => {
   it("browser is blocked by global disable before Cloudflare API fetch", async () => {
     const d1 = createMemoryD1();
     const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
     const env = makeEnv({ DB: d1.database, DISABLE_BROWSER: "true" });
 
     await expect(

@@ -15,6 +15,7 @@ export interface UsageCounterRow {
   image_requests: number;
   browser_ms_used: number;
   browser_ms_reserved: number;
+  frankensurf_requests: number;
   bytes_in: number;
   bytes_out: number;
   created_at: string;
@@ -64,7 +65,7 @@ export async function getCounterRow(
 ): Promise<UsageCounterRow | null> {
   return env.DB.prepare(
     `SELECT scope, scope_id, period, period_key, requests, native_requests, ai_requests,
-      browser_requests, image_requests, browser_ms_used, browser_ms_reserved,
+      browser_requests, image_requests, browser_ms_used, browser_ms_reserved, frankensurf_requests,
       bytes_in, bytes_out, created_at, updated_at
     FROM usage_counters
     WHERE scope = ? AND scope_id = ? AND period = ? AND period_key = ?`
@@ -117,7 +118,7 @@ export async function incrementRequests(env: Env, apiKeyId: string, now: Date): 
 export async function listUsageCounters(env: Env): Promise<UsageCounterRow[]> {
   const result = await env.DB.prepare(
     `SELECT scope, scope_id, period, period_key, requests, native_requests, ai_requests,
-      browser_requests, image_requests, browser_ms_used, browser_ms_reserved,
+      browser_requests, image_requests, browser_ms_used, browser_ms_reserved, frankensurf_requests,
       bytes_in, bytes_out, created_at, updated_at
     FROM usage_counters
     ORDER BY updated_at DESC
@@ -134,5 +135,6 @@ export type CounterColumn =
   | "image_requests"
   | "browser_ms_used"
   | "browser_ms_reserved"
+  | "frankensurf_requests"
   | "bytes_in"
   | "bytes_out";

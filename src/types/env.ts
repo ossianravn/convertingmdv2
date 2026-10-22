@@ -50,6 +50,14 @@ export interface Env {
   GLOBAL_MONTHLY_BROWSER_MS_LIMIT?: string;
   GLOBAL_DAILY_IMAGE_LIMIT?: string;
   GLOBAL_MONTHLY_IMAGE_LIMIT?: string;
+  TYPESAFE_API_KEY?: string;
+  TYPESAFE_MODEL?: string;
+  DISABLE_FRANKENSURF?: string;
+  FRANKENSURF_URL?: string;
+  FRANKENSURF_API_KEY?: string;
+  FRANKENSURF_TIMEOUT_MS?: string;
+  GLOBAL_DAILY_FRANKENSURF_LIMIT?: string;
+  GLOBAL_MONTHLY_FRANKENSURF_LIMIT?: string;
 }
 
 export interface AppVariables {

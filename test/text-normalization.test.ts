@@ -6,7 +6,7 @@ import type { ConversionResult } from "../src/conversion/result";
 import { normalizeMarkdownText } from "../src/conversion/text-normalization";
 import type { ApiKey, MarkdownRequest } from "../src/types/api";
 import { byteLength } from "../src/utils/bytes";
-import { createBrowserRunStub, makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv, stubFetch } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -95,7 +95,7 @@ async function strategyResult(mode: "native" | "ai" | "browser"): Promise<Conver
     BROWSER: createBrowserRunStub(async () => new Response(rawMarkdown(), { headers: { "X-Browser-Ms-Used": "1" } }))
   });
 
-  if (mode !== "browser") vi.stubGlobal("fetch", fetchForMode(mode));
+  if (mode !== "browser") stubFetch(fetchForMode(mode));
   return convertMarkdown(markdownRequest({ mode }), context(env, { allowBrowser: true }));
 }
 
@@ -105,7 +105,7 @@ async function cachedResult(): Promise<ConversionResult> {
   const kv = createMemoryKv({ [cacheKey]: conversionResult(rawMarkdown()) });
   const env = makeEnv({ CACHE_KV: kv.namespace });
   const fetchSpy = vi.fn();
-  vi.stubGlobal("fetch", fetchSpy);
+  stubFetch(fetchSpy);
 
   const result = await convertMarkdown(request, context(env));
 
@@ -180,6 +180,7 @@ function conversionResult(markdown: string): ConversionResult {
     outputBytes: byteLength(markdown),
     inputBytes: 100,
     sourceContentType: "text/html",
+    sourceStatus: 200,
     warnings: [],
     requestId: "req_cached"
   };

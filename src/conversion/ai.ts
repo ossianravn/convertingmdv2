@@ -54,6 +54,7 @@ export async function tryAiMarkdown(
     outputBytes,
     inputBytes: fetched.bytesRead,
     sourceContentType,
+    sourceStatus: fetched.response.status,
     warnings,
     requestId
   };

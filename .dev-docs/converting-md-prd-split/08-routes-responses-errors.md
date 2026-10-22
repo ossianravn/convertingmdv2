@@ -137,6 +137,10 @@ global_browser_budget_exceeded
 global_image_budget_exceeded
 cache_error
 cloudflare_api_error
+source_blocked
+source_not_found
+source_login_required
+frankensurf_budget_exceeded
 ```
 
 ## HTTP status mapping
@@ -147,9 +151,10 @@ cloudflare_api_error
 403 capability not allowed
 408 timeout
 413 source or output too large
+404 source page not found (source_not_found)
 429 quota exceeded
 500 internal error
-502 Cloudflare conversion API error
+502 Cloudflare conversion API error, or source_blocked
 504 conversion timeout
 ```
 

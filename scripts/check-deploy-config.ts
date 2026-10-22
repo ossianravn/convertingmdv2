@@ -71,8 +71,27 @@ function productionVarIssues(value: unknown): DeployConfigIssue[] {
     ...requiredVars.flatMap(([name, expected]) => {
       return value[name] === expected ? [] : [{ path: `vars.${name}`, message: `${name} must be ${JSON.stringify(expected)}.` }];
     }),
-    ...authModeIssues(value)
+    ...authModeIssues(value),
+    ...fallbackIssues(value)
   ];
+}
+
+// Jev answers are only stable on a pinned model; an alias moves on its own.
+// Frankensurf, when enabled, must be reached over TLS: the call carries its key.
+function fallbackIssues(vars: Record<string, unknown>): DeployConfigIssue[] {
+  const issues: DeployConfigIssue[] = [];
+  const model = vars["TYPESAFE_MODEL"];
+  if (typeof model !== "string" || !/^jev-\d+\.\d+\.\d+$/.test(model)) {
+    issues.push({ path: "vars.TYPESAFE_MODEL", message: 'TYPESAFE_MODEL must be a pinned Jev version such as "jev-1.14.0".' });
+  }
+
+  const enabled = vars["DISABLE_FRANKENSURF"] === "false";
+  const url = vars["FRANKENSURF_URL"];
+  if (enabled && (typeof url !== "string" || !url.startsWith("https://"))) {
+    issues.push({ path: "vars.FRANKENSURF_URL", message: "FRANKENSURF_URL must be an https:// URL when Frankensurf is enabled." });
+  }
+
+  return issues;
 }
 
 const requiredVars = [

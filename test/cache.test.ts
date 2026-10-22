@@ -6,7 +6,7 @@ import { parseConfig } from "../src/config";
 import { convertMarkdown, type ConversionContext } from "../src/conversion/orchestrator";
 import type { ConversionResult } from "../src/conversion/result";
 import type { ApiKey, MarkdownRequest } from "../src/types/api";
-import { makeEnv } from "./helpers";
+import { makeEnv, stubFetch } from "./helpers";
 import { apiKeyRow, createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv, type MemoryKv } from "./fakes/kv";
 
@@ -18,7 +18,7 @@ describe("markdown cache", () => {
   it("hits cache on the second identical request without fetching again", async () => {
     const kv = createMemoryKv();
     const fetchSpy = vi.fn(async () => new Response("# Cached", { headers: { "Content-Type": "text/markdown" } }));
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
     const request = markdownRequest({ mode: "native" });
     const firstContext = context({ CACHE_KV: kv.namespace });
     const secondContext = context({ CACHE_KV: kv.namespace, requestId: "req_second" });
@@ -38,7 +38,7 @@ describe("markdown cache", () => {
       markdownRequest({ ai: { cssSelector: "main" } })
     );
 
-    expect(plainKey.startsWith("md:v4:")).toBe(true);
+    expect(plainKey.startsWith("md:v5:")).toBe(true);
     expect(selectedKey).not.toBe(plainKey);
   });
 
@@ -54,7 +54,7 @@ describe("markdown cache", () => {
 
   it("does not cache conversions that fail the output byte limit", async () => {
     const kv = createMemoryKv();
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("# Too large", { headers: { "Content-Type": "text/markdown" } })));
+    stubFetch(vi.fn(async () => new Response("# Too large", { headers: { "Content-Type": "text/markdown" } })));
 
     await expect(
       convertMarkdown(markdownRequest({ mode: "native" }), context({ CACHE_KV: kv.namespace, MAX_OUTPUT_BYTES: "3" }))
@@ -68,7 +68,7 @@ describe("markdown cache", () => {
     const kv = createMemoryKv({ [cacheKey]: cachedBrowserResult() });
     const setup = await authedSetup(kv);
     const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const response = await app.fetch(markdownGet(setup.rawKey), setup.env);
 
@@ -167,6 +167,7 @@ function cachedBrowserResult(): ConversionResult {
     outputBytes: 17,
     inputBytes: 200,
     sourceContentType: "text/html",
+    sourceStatus: null,
     warnings: [],
     requestId: "req_old"
   };

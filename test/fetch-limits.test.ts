@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchWithLimits } from "../src/http/fetch-with-limits";
+import { stubFetch } from "./helpers";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -7,8 +8,7 @@ afterEach(() => {
 
 describe("fetchWithLimits", () => {
   it("follows validated redirects and returns the final URL", async () => {
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi
         .fn()
         .mockResolvedValueOnce(new Response(null, { status: 302, headers: { Location: "https://example.com/final" } }))
@@ -22,8 +22,7 @@ describe("fetchWithLimits", () => {
   });
 
   it("rejects redirects to blocked hosts", async () => {
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi.fn(async () => new Response(null, { status: 302, headers: { Location: "http://127.0.0.1" } }))
     );
 
@@ -34,8 +33,7 @@ describe("fetchWithLimits", () => {
   });
 
   it("rejects redirect chains over the configured maximum", async () => {
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi.fn(async () => new Response(null, { status: 302, headers: { Location: "https://example.com/next" } }))
     );
 
@@ -46,7 +44,7 @@ describe("fetchWithLimits", () => {
   });
 
   it("rejects source bodies over the byte limit", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("too-large")));
+    stubFetch(vi.fn(async () => new Response("too-large")));
 
     await expect(fetchWithLimits("https://example.com/start", fetchOptions({ maxBytes: 3 }))).rejects.toMatchObject({
       code: "source_too_large",
@@ -55,8 +53,7 @@ describe("fetchWithLimits", () => {
   });
 
   it("uses runtime redirect following when manual redirects return an empty headerless response", async () => {
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi
         .fn()
         .mockResolvedValueOnce(new Response(null))
@@ -71,7 +68,7 @@ describe("fetchWithLimits", () => {
 
   it("supports explicit runtime redirect following with final URL validation", async () => {
     const fetchSpy = vi.fn(async () => responseWithUrl("# Final", "https://example.com/final"));
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const result = await fetchWithLimits("https://example.com/start", fetchOptions({ redirectMode: "follow" }));
 
@@ -82,8 +79,7 @@ describe("fetchWithLimits", () => {
   });
 
   it("rejects runtime-followed redirects to blocked final URLs", async () => {
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi
         .fn()
         .mockResolvedValueOnce(new Response(null))

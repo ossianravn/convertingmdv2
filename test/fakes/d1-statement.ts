@@ -17,6 +17,7 @@ type CounterColumn = keyof Pick<
   | "image_requests"
   | "browser_ms_used"
   | "browser_ms_reserved"
+  | "frankensurf_requests"
   | "bytes_in"
   | "bytes_out"
 >;

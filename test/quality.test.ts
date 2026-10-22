@@ -61,6 +61,7 @@ function result(overrides: Partial<ConversionResult>): ConversionResult {
     outputBytes: 6,
     inputBytes: 1000,
     sourceContentType: "text/html; charset=utf-8",
+    sourceStatus: 200,
     warnings: [],
     requestId: "req_quality",
     ...overrides

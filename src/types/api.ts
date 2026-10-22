@@ -18,6 +18,10 @@ export type ErrorCode =
   | "cache_error"
   | "cloudflare_api_error"
   | "internal_error"
+  | "source_blocked"
+  | "source_not_found"
+  | "source_login_required"
+  | "frankensurf_budget_exceeded"
   | "not_found";
 
 export type ConversionMode = "auto" | "native" | "ai" | "browser";

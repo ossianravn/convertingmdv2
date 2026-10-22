@@ -3,7 +3,7 @@ import { parseConfig } from "../src/config";
 import { createMarkdownCacheKey } from "../src/cache/cache-key";
 import { convertMarkdown, type ConversionContext } from "../src/conversion/orchestrator";
 import type { ApiKey, MarkdownRequest } from "../src/types/api";
-import { createBrowserRunStub, makeEnv } from "./helpers";
+import { createBrowserRunStub, makeEnv, stubFetch } from "./helpers";
 import { createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -31,7 +31,7 @@ describe("conversion orchestrator", () => {
       }
     });
     const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const result = await convertMarkdown(request, context({ CACHE_KV: kv.namespace }));
 
@@ -41,8 +41,7 @@ describe("conversion orchestrator", () => {
 
   it("writes successful native conversions to cache", async () => {
     const kv = createMemoryKv();
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi.fn(async () => new Response("# Native", { headers: { "Content-Type": "text/markdown" } }))
     );
 
@@ -55,8 +54,7 @@ describe("conversion orchestrator", () => {
 
   it("falls back from unavailable native markdown to AI in auto mode", async () => {
     const aiSpy = vi.fn(async () => ({ markdown: "# AI", tokens: 11 }));
-    vi.stubGlobal(
-      "fetch",
+    stubFetch(
       vi
         .fn()
         .mockResolvedValueOnce(new Response("<html></html>", { headers: { "Content-Type": "text/html" } }))
@@ -77,7 +75,7 @@ describe("conversion orchestrator", () => {
       .fn()
       .mockResolvedValueOnce(new Response("<html></html>", { headers: { "Content-Type": "text/html" } }))
       .mockResolvedValueOnce(new Response("<html></html>", { headers: { "Content-Type": "text/html" } }));
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const result = await convertMarkdown(
       markdownRequest({ mode: "auto", browser: { enabled: true } }),
@@ -97,7 +95,7 @@ describe("conversion orchestrator", () => {
       .mockResolvedValueOnce(new Response("<html></html>", { headers: { "Content-Type": "text/html" } }))
       .mockResolvedValueOnce(new Response("<html></html>", { headers: { "Content-Type": "text/html" } }));
     const browserSpy = vi.fn(async () => new Response("# Browser", { headers: { "X-Browser-Ms-Used": "22" } }));
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const result = await convertMarkdown(
       markdownRequest({ mode: "auto", browser: { enabled: true } }),

@@ -3,7 +3,7 @@ import { createMarkdownCacheKey } from "../src/cache/cache-key";
 import { hashApiKey } from "../src/auth/hash";
 import type { MarkdownRequest } from "../src/types/api";
 import { app } from "../src/app";
-import { makeEnv } from "./helpers";
+import { makeEnv, stubFetch } from "./helpers";
 import { apiKeyRow, createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv, type MemoryKv } from "./fakes/kv";
 
@@ -14,7 +14,7 @@ afterEach(() => {
 describe("markdown route acceptance", () => {
   it("returns markdown headers and logs a successful conversion event", async () => {
     const setup = await authedSetup();
-    vi.stubGlobal("fetch", nativeFetch("# Native"));
+    stubFetch(nativeFetch("# Native"));
 
     const response = await app.fetch(markdownGet(setup.rawKey), setup.env);
 
@@ -43,7 +43,7 @@ describe("markdown route acceptance", () => {
 
   it("returns JSON format responses", async () => {
     const setup = await authedSetup();
-    vi.stubGlobal("fetch", nativeFetch("# Json"));
+    stubFetch(nativeFetch("# Json"));
 
     const response = await app.fetch(markdownPost(setup.rawKey, { format: "json" }), setup.env);
 
@@ -59,7 +59,7 @@ describe("markdown route acceptance", () => {
 
   it("accepts X-API-Key auth for conversion routes", async () => {
     const setup = await authedSetup();
-    vi.stubGlobal("fetch", nativeFetch("# Header"));
+    stubFetch(nativeFetch("# Header"));
 
     const response = await app.fetch(
       new Request("https://converting.md/v1/markdown?url=https%3A%2F%2Fexample.com%2Fpage", {
@@ -93,7 +93,7 @@ describe("markdown route acceptance", () => {
     });
     const setup = await authedSetup(kv);
     const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
+    stubFetch(fetchSpy);
 
     const response = await app.fetch(markdownGet(setup.rawKey), setup.env);
 
@@ -112,7 +112,7 @@ describe("markdown route acceptance", () => {
 
   it("supports the convenience endpoint and treats query string as target URL", async () => {
     const setup = await authedSetup();
-    vi.stubGlobal("fetch", nativeFetch("# Convenience"));
+    stubFetch(nativeFetch("# Convenience"));
 
     const response = await app.fetch(
       new Request("https://converting.md/https://example.com/page?x=1", {
@@ -131,7 +131,7 @@ describe("markdown route acceptance", () => {
 
   it("allows browser address-bar conversion when anonymous mode is explicit", async () => {
     const setup = anonymousSetup();
-    vi.stubGlobal("fetch", nativeFetch("# Anonymous"));
+    stubFetch(nativeFetch("# Anonymous"));
 
     const response = await app.fetch(new Request("https://converting.md/https://example.com/page"), setup.env);
 

@@ -38,6 +38,7 @@ export async function tryNativeMarkdown(url: string, config: AppConfig, requestI
     outputBytes,
     inputBytes: result.bytesRead,
     sourceContentType,
+    sourceStatus: result.response.status,
     warnings: [],
     requestId
   };

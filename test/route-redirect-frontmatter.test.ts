@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { hashApiKey } from "../src/auth/hash";
 import { app } from "../src/app";
-import { makeEnv } from "./helpers";
+import { makeEnv, stubFetch } from "./helpers";
 import { apiKeyRow, createMemoryD1 } from "./fakes/d1";
 import { createMemoryKv } from "./fakes/kv";
 
@@ -12,7 +12,7 @@ afterEach(() => {
 describe("redirected markdown responses", () => {
   it("follows source redirects and returns the final URL as first frontmatter field", async () => {
     const setup = await authedSetup();
-    vi.stubGlobal("fetch", edcRedirectFetch());
+    stubFetch(edcRedirectFetch());
 
     const response = await app.fetch(
       new Request("https://converting.md/https://www.edc.dk/roenne", {
